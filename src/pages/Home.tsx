@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload } from 'lucide-react';
+import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload, TrendingUp } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useQuery } from '@tanstack/react-query';
@@ -120,36 +120,36 @@ const Home = () => {
             <div className="relative bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-fuchsia-500 to-purple-600 flex items-center justify-center shadow-xl shadow-fuchsia-500/20">
-                  <Mic className="w-6 h-6 text-white" />
+                  <Sparkles className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div className="pt-6">
-                <h3 className="text-xl font-medium text-white mb-3">Record</h3>
-                <p className="text-slate-400 leading-relaxed">Record a concise summary of your research paper, explaining the key findings and implications.</p>
+                <h3 className="text-xl font-medium text-white mb-3">Generate Podcast</h3>
+                <p className="text-slate-400 leading-relaxed">Upload your research paper, and our AI transforms it into an engaging podcast in just a minute.</p>
               </div>
             </div>
 
             <div className="relative bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-xl shadow-sky-500/20">
-                  <Upload className="w-6 h-6 text-white" />
+                  <Share2 className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div className="pt-6">
-                <h3 className="text-xl font-medium text-white mb-3">Upload</h3>
-                <p className="text-slate-400 leading-relaxed">Upload your recording along with the paper details to share it with the research community.</p>
+                <h3 className="text-xl font-medium text-white mb-3">Publish & Share</h3>
+                <p className="text-slate-400 leading-relaxed">Easily publish your podcast and share it with your network to reach a broader audience.</p>
               </div>
             </div>
 
             <div className="relative bg-slate-800/50 border border-slate-700/50 rounded-2xl p-8 text-center">
               <div className="absolute -top-6 left-1/2 -translate-x-1/2">
                 <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center shadow-xl shadow-indigo-500/20">
-                  <Share2 className="w-6 h-6 text-white" />
+                  <TrendingUp className="w-6 h-6 text-white" />
                 </div>
               </div>
               <div className="pt-6">
-                <h3 className="text-xl font-medium text-white mb-3">Share</h3>
-                <p className="text-slate-400 leading-relaxed">Share your research podcast with colleagues and discover other interesting research summaries.</p>
+                <h3 className="text-xl font-medium text-white mb-3">Amplify Your Impact</h3>
+                <p className="text-slate-400 leading-relaxed">Engage listeners beyond academia, sparking broader discussions and enhancing the visibility of your work.</p>
               </div>
             </div>
           </div>
@@ -160,7 +160,7 @@ const Home = () => {
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-16">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl font-medium text-white">
-            Discover Research Podcasts
+            Discover the Latest Research Podcasts
           </h2>
           <p className="mt-4 text-lg text-slate-400">
             Browse through our collection of AI-generated research podcasts
