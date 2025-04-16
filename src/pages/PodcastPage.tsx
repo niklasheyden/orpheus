@@ -275,8 +275,9 @@ const PodcastPage = () => {
   };
 
   const handleDeleteConfirm = async () => {
-    if (!podcast || !user || user.id !== podcast.user_id) {
+    if (!podcast || !user) {
       console.error('Delete failed: Invalid user or podcast data', { user, podcast });
+      setDeleteError('Unable to delete podcast: Invalid user or podcast data');
       return;
     }
 
@@ -284,66 +285,26 @@ const PodcastPage = () => {
       setIsDeleting(true);
       setDeleteError(null);
 
-      // First, delete the podcast record to ensure database consistency
+      // Delete the podcast record first
       console.log('Attempting to delete podcast:', podcast.id);
-      const { error: dbError } = await supabase
-        .from('podcasts')
-        .delete()
-        .eq('id', podcast.id)
-        .eq('user_id', user.id); // Add user_id check for extra security
+      const { data, error: deleteError } = await supabase
+        .rpc('delete_podcast', {
+          p_podcast_id: podcast.id,
+          p_user_id: user.id
+        });
 
-      if (dbError) {
-        console.error('Error deleting podcast:', dbError);
-        throw new Error(`Failed to delete podcast: ${dbError.message}`);
+      if (deleteError) {
+        console.error('Error deleting podcast:', deleteError);
+        throw new Error(`Failed to delete podcast: ${deleteError.message}`);
       }
 
-      // Then delete all likes for this podcast
-      console.log('Attempting to delete likes for podcast:', podcast.id);
-      const { error: likesError } = await supabase
-        .from('likes')
-        .delete()
-        .eq('podcast_id', podcast.id);
-
-      if (likesError) {
-        console.error('Error deleting likes:', likesError);
-        // Continue with deletion even if likes deletion fails
-      }
-
-      // Delete all playlist entries for this podcast
-      console.log('Attempting to delete playlist entries for podcast:', podcast.id);
-      const { error: playlistError } = await supabase
-        .from('playlists')
-        .delete()
-        .eq('podcast_id', podcast.id);
-
-      if (playlistError) {
-        console.error('Error deleting playlist entries:', playlistError);
-        // Continue with deletion even if playlist deletion fails
-      }
-
-      // Finally, delete the audio file from storage
-      let audioPath = podcast.audio_url;
-      if (audioPath.includes('storage/v1/object/public/podcasts/')) {
-        audioPath = audioPath.split('storage/v1/object/public/podcasts/')[1];
-      }
-
-      console.log('Attempting to delete audio file:', audioPath);
-      const { error: storageError } = await supabase
-        .storage
-        .from('podcasts')
-        .remove([audioPath]);
-
-      if (storageError) {
-        console.error('Error deleting audio file:', storageError);
-        // Continue with deletion even if storage deletion fails
-      }
-
-      // Invalidate all relevant queries
+      // Invalidate queries
       queryClient.invalidateQueries({ queryKey: ['podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['user-podcasts'] });
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
       queryClient.invalidateQueries({ queryKey: ['likes'] });
       queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcast.id] });
 
       navigate('/');
       showToast('Podcast deleted successfully');
@@ -353,6 +314,7 @@ const PodcastPage = () => {
       showToast('Failed to delete podcast');
     } finally {
       setIsDeleting(false);
+      setShowDeleteConfirm(false);
     }
   };
 
