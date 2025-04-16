@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload, TrendingUp } from 'lucide-react';
+import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload, TrendingUp, Lock, User, ListMusic, BookOpen, Users, PlayCircle } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useQuery } from '@tanstack/react-query';
@@ -75,8 +75,6 @@ const Home = () => {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-4">Discover Research Podcasts</h1>
-
       {/* Hero Section */}
       <div className="relative overflow-hidden mb-32">
         <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
@@ -157,7 +155,7 @@ const Home = () => {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-16">
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
         <div className="text-center mb-12">
           <h2 className="font-display text-3xl font-medium text-white">
             Discover the Latest Research Podcasts
@@ -170,14 +168,14 @@ const Home = () => {
         <div className="mb-12">
           <div className="flex flex-col sm:flex-row gap-4">
             <div className="flex-1">
-              <input
-                type="text"
-                placeholder="Search podcasts..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                <input
+                  type="text"
+                  placeholder="Search podcasts..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
-              />
-            </div>
+                />
+              </div>
             <div className="relative">
               <button
                 onClick={() => setShowFilterDropdown(!showFilterDropdown)}
@@ -208,7 +206,7 @@ const Home = () => {
                         {RESEARCH_FIELDS.filter(field => field.category === category).map((field) => {
                           const Icon = field.icon;
                           return (
-                            <button
+                      <button
                               key={field.id}
                               onClick={() => {
                                 setSelectedField(field.name);
@@ -220,7 +218,7 @@ const Home = () => {
                             >
                               <Icon size={16} className="text-fuchsia-400" />
                               {field.name}
-                            </button>
+                      </button>
                           );
                         })}
                       </div>
@@ -228,14 +226,14 @@ const Home = () => {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-          
+                  </div>
+                </div>
+
           {/* Quick filters */}
           <div className="flex flex-wrap gap-2 mt-6 sm:mt-2">
             <span className="text-sm text-slate-400 mr-2">Quick filters:</span>
             {quickFilters.map((filter) => (
-              <button
+                  <button
                 key={filter.name}
                 onClick={() => setSelectedField(selectedField === filter.name ? null : filter.name)}
                 className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
@@ -245,22 +243,299 @@ const Home = () => {
                   }`}
               >
                 {filter.name}
-              </button>
+                  </button>
             ))}
+          </div>
+        </div>
+
+        {/* Podcasts Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {podcasts.slice(0, 3).map((podcast) => (
+            <PodcastCard key={podcast.id} podcast={podcast} />
+          ))}
+        </div>
+        <div className="mt-8 text-center">
+          <Link
+            to="/explore"
+            className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
+          >
+            <span className="mr-3">Discover Podcasts</span>
+            <Compass className="h-5 w-5" />
+          </Link>
+        </div>
+      </div>
+
+      {/* Private Research Podcasts Feature Section */}
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
+        <div className="mx-auto max-w-2xl lg:max-w-none">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-medium text-white sm:text-4xl">
+              Choose Who Can Listen
+            </h2>
+            <p className="mt-4 text-lg text-slate-400">
+              Simple privacy controls for your research podcasts
+            </p>
+          </div>
+          
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-teal-500/10 rounded-[2.5rem]" />
+            <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(0deg,transparent,black)] opacity-20" />
+            <div className="relative rounded-[2.5rem] p-6 sm:p-12 border border-emerald-500/20">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-start">
+                <div>
+                  <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 overflow-hidden">
+                    <div className="p-4 sm:p-6">
+                      <div className="flex items-center justify-between mb-6">
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                            <Lock className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                          </div>
+                          <div>
+                            <div className="text-base sm:text-lg font-medium text-white">Privacy Settings</div>
+                            <div className="text-xs sm:text-sm text-slate-400">Control visibility</div>
+                          </div>
+                        </div>
+                        <div className="h-6 w-11 sm:h-7 sm:w-12 rounded-full bg-emerald-500/20 flex items-center justify-end p-1 cursor-pointer">
+                          <div className="h-4 w-4 sm:h-5 sm:w-5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/50" />
+                        </div>
+                      </div>
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-900/50">
+                          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                          <div className="text-xs sm:text-sm text-slate-300">Only visible to you</div>
+                        </div>
+                        <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-900/50">
+                          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                          <div className="text-xs sm:text-sm text-slate-300">Access through your account</div>
+                        </div>
+                        <div className="flex items-center gap-3 p-2.5 sm:p-3 rounded-xl bg-slate-900/50">
+                          <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-emerald-400" />
+                          <div className="text-xs sm:text-sm text-slate-300">Change visibility anytime</div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-4 sm:px-6 py-3 sm:py-4 border-t border-slate-700/50 bg-slate-900/50">
+                      <div className="flex items-center justify-between">
+                        <div className="text-xs sm:text-sm text-slate-400">Current status</div>
+                        <div className="flex items-center gap-2 text-xs sm:text-sm font-medium text-emerald-400">
+                          <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                          Private
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="space-y-4 sm:space-y-6">
+                  <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-4 sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <Headphones className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-medium text-white truncate">Deep Learning in Healthcare</div>
+                        <div className="text-[10px] sm:text-xs text-slate-400">15 min • Generated today</div>
+                      </div>
+                      <div className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                        <span className="text-[10px] sm:text-xs font-medium text-emerald-400">Private</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
+                      <div className="h-full w-2/3 bg-gradient-to-r from-emerald-500 to-teal-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-4 sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <Headphones className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-medium text-white truncate">Quantum Computing Research</div>
+                        <div className="text-[10px] sm:text-xs text-slate-400">18 min • Generated yesterday</div>
+                      </div>
+                      <div className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20">
+                        <Lock className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400" />
+                        <span className="text-[10px] sm:text-xs font-medium text-emerald-400">Private</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
+                      <div className="h-full w-1/3 bg-gradient-to-r from-emerald-500 to-teal-600" />
+                    </div>
+                  </div>
+
+                  <div className="bg-slate-800/50 backdrop-blur-sm rounded-2xl border border-slate-700/50 p-4 sm:p-6">
+                    <div className="flex items-center gap-3 sm:gap-4 mb-4">
+                      <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center">
+                        <Headphones className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs sm:text-sm font-medium text-white truncate">Climate Change Impact</div>
+                        <div className="text-[10px] sm:text-xs text-slate-400">12 min • Published</div>
+                      </div>
+                      <div className="flex items-center gap-1 px-2 sm:px-3 py-1 rounded-full bg-slate-800 border border-slate-700">
+                        <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-400" />
+                        <span className="text-[10px] sm:text-xs font-medium text-slate-400">Public</span>
+                      </div>
+                    </div>
+                    <div className="h-1.5 rounded-full bg-slate-700/50 overflow-hidden">
+                      <div className="h-full w-full bg-gradient-to-r from-emerald-500 to-teal-600" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* Podcasts Grid */}
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-32">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {podcasts.map((podcast) => (
-            <PodcastCard key={podcast.id} podcast={podcast} />
-          ))}
+      {/* Researcher Profiles Feature Section */}
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
+        <div className="mx-auto max-w-2xl lg:max-w-none">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-medium text-white sm:text-4xl">
+              Showcase Your Research
+            </h2>
+            <p className="mt-4 text-lg text-slate-400">
+              Create your professional profile and connect with other researchers
+            </p>
+          </div>
+          
+          <div className="flex flex-col gap-16">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center mb-4">
+                  <User className="w-6 h-6 text-fuchsia-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">Your Research Identity</h3>
+                <p className="text-sm text-slate-400">Display your academic status, affiliation, and research interests to build your presence in the research community</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center mb-4">
+                  <BookOpen className="w-6 h-6 text-fuchsia-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">Publication Portfolio</h3>
+                <p className="text-sm text-slate-400">Showcase your research papers and their audio versions in one professional profile</p>
+              </div>
+              <div className="flex flex-col items-center text-center">
+                <div className="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-fuchsia-400" />
+                </div>
+                <h3 className="text-lg font-medium text-white mb-2">Research Network</h3>
+                <p className="text-sm text-slate-400">Connect with other researchers in your field and grow your academic network</p>
+              </div>
+            </div>
+            <div className="relative w-full">
+              <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[rgb(2,4,15)] via-[rgb(15,23,42)]/95 to-transparent" />
+              <img 
+                src="images/orpheus_profile-mockup.png" 
+                alt="Profile Mockup" 
+                className="w-full rounded-2xl border border-slate-700/50 shadow-2xl shadow-black/50"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* CTA Section */}
+      {/* Personal Playlists Feature Section */}
+      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
+        <div className="mx-auto max-w-2xl lg:max-w-none">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-medium text-white sm:text-4xl">
+              Listen on the Go
+            </h2>
+            <p className="mt-4 text-lg text-slate-400">
+              Create playlists to save and organize podcasts for later listening
+            </p>
+            </div>
+          
+          <div className="relative bg-slate-800/50 border border-slate-700/50 rounded-2xl overflow-visible">
+            <div className="p-8">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+                <div>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg shadow-amber-500/20 mb-6">
+                    <ListMusic className="w-6 h-6 text-white" />
+                  </div>
+                  <h3 className="text-xl font-medium text-white mb-3">Manage Your Library</h3>
+                  <p className="text-slate-400 leading-relaxed mb-6">
+                    Build your personal collection of research podcasts. Save interesting content to listen to later and keep your research organized in one place.
+                  </p>
+                  <ul className="space-y-3 text-slate-300">
+                    <li className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center mt-0.5">
+                        <BookOpen className="w-3 h-3 text-amber-400" />
+                      </div>
+                      <span>Save podcasts to your library with one click</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center mt-0.5">
+                        <Headphones className="w-3 h-3 text-amber-400" />
+                      </div>
+                      <span>Listen to saved podcasts anytime, anywhere</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-5 h-5 rounded-full bg-amber-500/20 flex items-center justify-center mt-0.5">
+                        <Waveform className="w-3 h-3 text-amber-400" />
+                      </div>
+                      <span>Track your listening progress across devices</span>
+                    </li>
+                  </ul>
+                </div>
+                <div className="bg-slate-900/50 rounded-xl p-6 border border-slate-700/50">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center">
+                      <ListMusic className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div>
+                      <div className="text-lg font-medium text-white">My Research Playlist</div>
+                      <div className="text-sm text-slate-400">8 podcasts</div>
+                    </div>
+                  </div>
+                  <div className="space-y-3 mb-4">
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center text-white text-xs font-bold">
+                        NN
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white truncate">Neural Networks in Computer Vision</div>
+                        <div className="text-xs text-slate-400">Dr. Jane Doe • 12 min</div>
+                      </div>
+                      <PlayCircle className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold">
+                        QC
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white truncate">Quantum Computing Advances</div>
+                        <div className="text-xs text-slate-400">Dr. John Smith • 15 min</div>
+                      </div>
+                      <PlayCircle className="w-5 h-5 text-amber-400" />
+                    </div>
+                    <div className="flex items-center gap-3 p-2 rounded-lg bg-slate-800/50 hover:bg-slate-800 transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white text-xs font-bold">
+                        CC
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-medium text-white truncate">Climate Change Models</div>
+                        <div className="text-xs text-slate-400">Dr. Sarah Johnson • 18 min</div>
+                      </div>
+                      <PlayCircle className="w-5 h-5 text-amber-400" />
+                    </div>
+                  </div>
+                  <div className="text-center">
+                    <button className="text-xs text-amber-400 hover:text-amber-300 transition-colors">
+                      View all 8 podcasts
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+          {/* CTA Section */}
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-16">
         <div className="relative rounded-2xl overflow-hidden">
           <div className="absolute inset-0 bg-gradient-to-r from-sky-400 to-indigo-500 opacity-10" />
@@ -284,18 +559,18 @@ const Home = () => {
                   </button>
                 ) : (
                   <>
-                    <button
+              <button
                       onClick={() => navigate('/auth')}
                       className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400/80 to-indigo-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-sky-400 hover:to-indigo-500 hover:shadow-sky-400/20"
-                    >
-                      <span className="mr-3">Get Started</span>
-                      <Sparkles className="h-5 w-5" />
-                    </button>
+              >
+                <span className="mr-3">Get Started</span>
+                <Sparkles className="h-5 w-5" />
+              </button>
                     <button
                       onClick={() => navigate('/explore')}
                       className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
                     >
-                      <span className="mr-3">Explore Podcasts</span>
+                      <span className="mr-3">Discover Podcasts</span>
                       <Compass className="h-5 w-5" />
                     </button>
                   </>

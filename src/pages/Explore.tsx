@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Search, TrendingUp, Zap, BookOpen, ChevronDown, Filter, Heart, Clock, User } from 'lucide-react';
+import { Search, TrendingUp, Zap, BookOpen, ChevronDown, Filter, Heart, Clock, User, Users } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
@@ -84,39 +84,30 @@ const Explore = () => {
     retryDelay: 1000
   });
 
-  // Fetch recently released podcasts (last 7 days)
-  const { data: recentPodcasts, isLoading: isLoadingRecent } = useQuery<Podcast[]>({
-    queryKey: ['recent-podcasts'],
+  // Fetch all users (limited to 30)
+  const { data: allUsers, isLoading: isLoadingUsers } = useQuery<(Profile & { id: string })[]>({
+    queryKey: ['explore-users'],
     queryFn: async () => {
-      try {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-        
-        const { data, error } = await supabase
-          .from('podcasts')
-          .select('*')
-          .gte('created_at', sevenDaysAgo.toISOString())
-          .order('created_at', { ascending: false })
-          .limit(6);
-          
-        if (error) throw error;
-        return data || [];
-      } catch (error) {
-        console.error('Error fetching recent podcasts:', error);
-        throw error;
-      }
+      const { data: profiles, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .limit(30)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      return profiles || [];
     }
   });
 
-  // Fetch trending podcasts (most liked in the last 30 days)
+  // Fetch trending podcasts (most liked in the last 7 days)
   const { data: trendingPodcasts, isLoading: isLoadingTrending } = useQuery<Podcast[]>({
     queryKey: ['trending-podcasts'],
     queryFn: async () => {
       try {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-        // Get podcasts with their like counts
+        // Get podcasts with their like counts from the last 7 days
         const { data: podcasts, error: podcastsError } = await supabase
           .from('podcasts')
           .select(`
@@ -124,16 +115,18 @@ const Explore = () => {
             likes(count)
           `)
           .eq('is_public', true)
-          .order('created_at', { ascending: false })
-          .limit(6);
+          .gte('created_at', sevenDaysAgo.toISOString())
+          .limit(10);
 
         if (podcastsError) throw podcastsError;
 
         // Sort podcasts by like count
-        const podcastsWithLikeCounts = (podcasts || []).map(podcast => ({
-          ...podcast,
-          likeCount: podcast.likes[0]?.count || 0
-        })).sort((a, b) => b.likeCount - a.likeCount);
+        const podcastsWithLikeCounts = (podcasts || [])
+          .map(podcast => ({
+            ...podcast,
+            likeCount: podcast.likes[0]?.count || 0
+          }))
+          .sort((a, b) => b.likeCount - a.likeCount);
 
         return podcastsWithLikeCounts;
       } catch (error) {
@@ -143,21 +136,52 @@ const Explore = () => {
     }
   });
 
-  // Fetch most liked podcasts
+  // Fetch most liked podcasts (all time)
   const { data: mostLikedPodcasts, isLoading: isLoadingMostLiked } = useQuery<Podcast[]>({
     queryKey: ['most-liked-podcasts'],
     queryFn: async () => {
       try {
         const { data: podcastsWithLikes, error: countError } = await supabase
           .from('podcasts')
-          .select('*, likes(*)')
-          .order('created_at', { ascending: false })
-          .limit(6);
+          .select(`
+            *,
+            likes(count)
+          `)
+          .eq('is_public', true)
+          .limit(10);
           
         if (countError) throw countError;
-        return podcastsWithLikes || [];
+
+        // Sort by like count
+        return (podcastsWithLikes || [])
+          .map(podcast => ({
+            ...podcast,
+            likeCount: podcast.likes[0]?.count || 0
+          }))
+          .sort((a, b) => b.likeCount - a.likeCount);
       } catch (error) {
         console.error('Error fetching most liked podcasts:', error);
+        throw error;
+      }
+    }
+  });
+
+  // Fetch recently released podcasts
+  const { data: recentPodcasts, isLoading: isLoadingRecent } = useQuery<Podcast[]>({
+    queryKey: ['recent-podcasts'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('podcasts')
+          .select('*')
+          .eq('is_public', true)
+          .order('created_at', { ascending: false })
+          .limit(10);
+          
+        if (error) throw error;
+        return data || [];
+      } catch (error) {
+        console.error('Error fetching recent podcasts:', error);
         throw error;
       }
     }
@@ -171,8 +195,8 @@ const Explore = () => {
       <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
         <div className="text-center mb-8">
-          <h1 className="font-display text-3xl font-medium text-white sm:text-4xl">Explore</h1>
-          <p className="mt-2 text-base text-slate-400">Discover research podcasts</p>
+          <h1 className="font-display text-3xl font-medium text-white sm:text-4xl">Discover</h1>
+          <p className="mt-2 text-base text-slate-400">Find research podcasts and connect with researchers</p>
         </div>
 
         {/* Search and Filter Section */}
@@ -259,27 +283,31 @@ const Explore = () => {
           ))}
         </div>
 
-        {/* Followed Users Section - Moved below search and filters */}
-        {user && followedUsers && followedUsers.length > 0 && (
-          <div className="mb-12">
-            <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
-              <User className="w-5 h-5 text-fuchsia-400" />
-              Following
-            </h2>
-            <div className="relative">
-              <div className="flex overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
-                <div className="flex space-x-4">
-                  {followedUsers.map((followedUser) => (
+        {/* Users Section */}
+        <div className="mb-12">
+          <h2 className="text-lg font-medium text-white mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-fuchsia-400" />
+            Connect with Researchers
+          </h2>
+          <div className="relative">
+            <div className="flex overflow-x-auto pb-4 scrollbar-hide -mx-4 px-4">
+              <div className="flex space-x-4">
+                {isLoadingUsers ? (
+                  <div className="flex items-center justify-center w-full py-4">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-fuchsia-500"></div>
+                  </div>
+                ) : allUsers && allUsers.length > 0 ? (
+                  allUsers.map((profile) => (
                     <Link
-                      key={followedUser.id}
-                      to={`/user/${followedUser.id}`}
+                      key={profile.id}
+                      to={`/user/${profile.id}`}
                       className="flex-shrink-0 group"
                     >
                       <div className="w-16 h-16 rounded-full overflow-hidden bg-slate-700/50 flex items-center justify-center ring-2 ring-transparent group-hover:ring-fuchsia-500 transition-all duration-200">
-                        {followedUser.avatar_url ? (
+                        {profile.avatar_url ? (
                           <img 
-                            src={followedUser.avatar_url} 
-                            alt={followedUser.name || 'User'} 
+                            src={profile.avatar_url} 
+                            alt={profile.name || 'User'} 
                             className="w-full h-full object-cover"
                           />
                         ) : (
@@ -287,17 +315,18 @@ const Explore = () => {
                         )}
                       </div>
                       <p className="mt-2 text-sm text-center text-slate-300 group-hover:text-white transition-colors truncate max-w-[4rem]">
-                        {followedUser.name || 'Anonymous'}
+                        {profile.name || 'Anonymous'}
                       </p>
                     </Link>
-                  ))}
-                </div>
+                  ))
+                ) : (
+                  <div className="text-center text-slate-400 py-4">No users found</div>
+                )}
               </div>
-              <div className="absolute left-0 top-0 bottom-4 w-4 bg-gradient-to-r from-slate-950 to-transparent" />
-              <div className="absolute right-0 top-0 bottom-4 w-4 bg-gradient-to-l from-slate-950 to-transparent" />
             </div>
+            <div className="absolute right-0 top-0 bottom-4 w-32 bg-gradient-to-l from-slate-950 from-0% via-slate-950/95 via-10% to-transparent pointer-events-none" />
           </div>
-        )}
+        </div>
 
         {/* Show either discovery sections or search results */}
         {showDiscoverySections ? (
@@ -309,22 +338,27 @@ const Explore = () => {
                   <TrendingUp className="text-fuchsia-400" size={24} />
                   Trending Now
                 </h2>
-                <a href="#" className="text-sm text-fuchsia-400 hover:text-fuchsia-300 transition-colors">View all</a>
+                <Link to="/trending" className="text-sm text-fuchsia-400 hover:text-fuchsia-300 transition-colors">View all</Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoadingTrending ? (
-                  <div className="col-span-full flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuchsia-500"></div>
+              <div className="relative">
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide">
+                  <div className="flex space-x-6 px-4">
+                    {isLoadingTrending ? (
+                      <div className="flex items-center justify-center w-full py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-fuchsia-500"></div>
+                      </div>
+                    ) : trendingPodcasts && trendingPodcasts.length > 0 ? (
+                      trendingPodcasts.map((podcast) => (
+                        <div key={podcast.id} className="w-[300px] flex-shrink-0">
+                          <PodcastCard podcast={podcast} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-slate-400 py-12">No trending podcasts found</div>
+                    )}
                   </div>
-                ) : trendingPodcasts && trendingPodcasts.length > 0 ? (
-                  trendingPodcasts.map((podcast) => (
-                    <PodcastCard key={podcast.id} podcast={podcast} />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-slate-400">No trending podcasts found</p>
-                  </div>
-                )}
+                </div>
+                <div className="absolute right-0 top-0 bottom-4 w-32 bg-gradient-to-l from-slate-950 from-0% via-slate-950/95 via-10% to-transparent pointer-events-none" />
               </div>
             </div>
 
@@ -335,22 +369,27 @@ const Explore = () => {
                   <Heart className="text-red-400" size={24} />
                   Most Liked
                 </h2>
-                <a href="#" className="text-sm text-red-400 hover:text-red-300 transition-colors">View all</a>
+                <Link to="/most-liked" className="text-sm text-red-400 hover:text-red-300 transition-colors">View all</Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoadingMostLiked ? (
-                  <div className="col-span-full flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+              <div className="relative">
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide">
+                  <div className="flex space-x-6 px-4">
+                    {isLoadingMostLiked ? (
+                      <div className="flex items-center justify-center w-full py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+                      </div>
+                    ) : mostLikedPodcasts && mostLikedPodcasts.length > 0 ? (
+                      mostLikedPodcasts.map((podcast) => (
+                        <div key={podcast.id} className="w-[300px] flex-shrink-0">
+                          <PodcastCard podcast={podcast} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-slate-400 py-12">No liked podcasts found</div>
+                    )}
                   </div>
-                ) : mostLikedPodcasts && mostLikedPodcasts.length > 0 ? (
-                  mostLikedPodcasts.map((podcast) => (
-                    <PodcastCard key={podcast.id} podcast={podcast} />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-slate-400">No liked podcasts found</p>
-                  </div>
-                )}
+                </div>
+                <div className="absolute right-0 top-0 bottom-4 w-32 bg-gradient-to-l from-slate-950 from-0% via-slate-950/95 via-10% to-transparent pointer-events-none" />
               </div>
             </div>
 
@@ -361,22 +400,27 @@ const Explore = () => {
                   <Clock className="text-sky-400" size={24} />
                   Recently Released
                 </h2>
-                <a href="#" className="text-sm text-sky-400 hover:text-sky-300 transition-colors">View all</a>
+                <Link to="/recent" className="text-sm text-sky-400 hover:text-sky-300 transition-colors">View all</Link>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {isLoadingRecent ? (
-                  <div className="col-span-full flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+              <div className="relative">
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide">
+                  <div className="flex space-x-6 px-4">
+                    {isLoadingRecent ? (
+                      <div className="flex items-center justify-center w-full py-12">
+                        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-sky-500"></div>
+                      </div>
+                    ) : recentPodcasts && recentPodcasts.length > 0 ? (
+                      recentPodcasts.map((podcast) => (
+                        <div key={podcast.id} className="w-[300px] flex-shrink-0">
+                          <PodcastCard podcast={podcast} />
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center text-slate-400 py-12">No recent podcasts found</div>
+                    )}
                   </div>
-                ) : recentPodcasts && recentPodcasts.length > 0 ? (
-                  recentPodcasts.map((podcast) => (
-                    <PodcastCard key={podcast.id} podcast={podcast} />
-                  ))
-                ) : (
-                  <div className="col-span-full text-center py-12">
-                    <p className="text-slate-400">No recent podcasts found</p>
-                  </div>
-                )}
+                </div>
+                <div className="absolute right-0 top-0 bottom-4 w-32 bg-gradient-to-l from-slate-950 from-0% via-slate-950/95 via-10% to-transparent pointer-events-none" />
               </div>
             </div>
           </>

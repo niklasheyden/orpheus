@@ -1,6 +1,6 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Play, Pause, Download, Share2, Calendar, Users, BookOpen, Trash2, Edit, Plus, Minus, Heart, Bookmark, BookmarkCheck, ListMusic, MoreHorizontal } from 'lucide-react';
+import { Play, Pause, Download, Share2, Calendar, Users, BookOpen, Trash2, Edit, Plus, Minus, Heart, Bookmark, BookmarkCheck, ListMusic, MoreHorizontal, MoreVertical, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
@@ -8,6 +8,8 @@ import type { Podcast } from '../lib/types';
 import { useToast } from '../components/Toast';
 import EditPodcastForm from '../components/EditPodcastForm';
 import { Loader } from '../components/Loader';
+import { useAudioPlayer } from '../hooks/useAudioPlayer';
+import { formatDate } from '../utils/formatDate';
 
 const PodcastPage = () => {
   const { id } = useParams();
@@ -23,6 +25,7 @@ const PodcastPage = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
+  const [isAbstractExpanded, setIsAbstractExpanded] = useState(false);
   const audioRef = useRef<HTMLAudioElement>(null);
   const { showToast } = useToast();
   const [isInPlaylist, setIsInPlaylist] = useState(false);
@@ -30,6 +33,11 @@ const PodcastPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const { currentPodcast, isPlaying: audioPlayerIsPlaying, playPodcast } = useAudioPlayer();
+  const [lastPlayTime, setLastPlayTime] = useState<number | null>(null);
+  const [playStartTime, setPlayStartTime] = useState<number | null>(null);
+  const MINIMUM_PLAY_DURATION = 20; // seconds
+  const PLAY_COOLDOWN = 300; // 5 minutes in seconds
 
   const { data: podcast, isLoading, error } = useQuery<Podcast>({
     queryKey: ['podcast', id],
@@ -45,6 +53,8 @@ const PodcastPage = () => {
       return data;
     }
   });
+
+  const isCurrentlyPlaying = currentPodcast?.id === podcast?.id && audioPlayerIsPlaying;
 
   const { data: creator } = useQuery({
     queryKey: ['creator', podcast?.user_id],
@@ -147,40 +157,15 @@ const PodcastPage = () => {
   }, [podcast]);
 
   useEffect(() => {
-    if (audioRef.current) {
-      const audio = audioRef.current;
-
-      const handleTimeUpdate = () => {
-        setProgress((audio.currentTime / audio.duration) * 100);
-      };
-
-      const handleLoadedMetadata = () => {
+    if (audioUrl) {
+      const audio = new Audio(audioUrl);
+      audio.addEventListener('loadedmetadata', () => {
+        console.log('Audio duration loaded:', audio.duration);
         setDuration(audio.duration);
-      };
-
-      const handleEnded = () => {
-        setIsPlaying(false);
-        setProgress(0);
-        audio.currentTime = 0;
-      };
-
-      const handleError = (e: ErrorEvent) => {
-        console.error('Audio element error:', e);
-        setAudioError('Error playing audio file');
-        setIsPlaying(false);
-      };
-
-      audio.addEventListener('timeupdate', handleTimeUpdate);
-      audio.addEventListener('loadedmetadata', handleLoadedMetadata);
-      audio.addEventListener('ended', handleEnded);
-      audio.addEventListener('error', handleError);
-
-      return () => {
-        audio.removeEventListener('timeupdate', handleTimeUpdate);
-        audio.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        audio.removeEventListener('ended', handleEnded);
-        audio.removeEventListener('error', handleError);
-      };
+      });
+      audio.addEventListener('error', (e) => {
+        console.error('Error loading audio:', e);
+      });
     }
   }, [audioUrl]);
 
@@ -208,19 +193,103 @@ const PodcastPage = () => {
     checkStatus();
   }, [user, id]);
 
-  const handlePlayPause = () => {
-    if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play().catch(error => {
-          console.error('Error playing audio:', error);
-          setAudioError('Failed to play audio file');
-          setIsPlaying(false);
-        });
-      }
-      setIsPlaying(!isPlaying);
+  const recordPlay = useCallback(async () => {
+    if (!user || !podcast) {
+      console.log('Cannot record play: missing user or podcast', { user, podcast });
+      return;
     }
+    
+    try {
+      console.log('Updating listen count...');
+      // First get the current listen count
+      const { data: currentData, error: fetchError } = await supabase
+        .from('podcasts')
+        .select('listen_count')
+        .eq('id', podcast.id)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching current listen count:', fetchError);
+        return;
+      }
+
+      const currentCount = currentData?.listen_count || 0;
+      console.log('Current listen count:', currentCount);
+
+      // Update listen count
+      const { error: updateError } = await supabase
+        .from('podcasts')
+        .update({ 
+          listen_count: currentCount + 1,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', podcast.id);
+
+      if (updateError) {
+        console.error('Error updating listen count:', updateError);
+        return;
+      }
+
+      console.log('Listen count updated successfully to:', currentCount + 1);
+
+      // Invalidate queries to refresh the UI
+      queryClient.invalidateQueries({ queryKey: ['podcast', podcast.id] });
+      console.log('Queries invalidated, UI should update');
+    } catch (error) {
+      console.error('Error in recordPlay:', error);
+    }
+  }, [user, podcast, queryClient]);
+
+  // Monitor play duration only for authenticated users
+  useEffect(() => {
+    if (!user || !isCurrentlyPlaying || !playStartTime) {
+      console.log('Play monitoring inactive:', { isCurrentlyPlaying, playStartTime, isAuthenticated: !!user });
+      return;
+    }
+
+    console.log('Starting play duration monitoring...');
+    const checkPlayDuration = () => {
+      const now = Date.now() / 1000;
+      const playDuration = now - playStartTime;
+      console.log('Current play duration:', Math.round(playDuration), 'seconds');
+      
+      if (playDuration >= MINIMUM_PLAY_DURATION) {
+        console.log('Minimum play duration reached, recording play...');
+        recordPlay();
+        setPlayStartTime(null);
+      }
+    };
+
+    const timer = setInterval(checkPlayDuration, 1000);
+    return () => {
+      clearInterval(timer);
+      console.log('Play monitoring cleared');
+    };
+  }, [isCurrentlyPlaying, playStartTime, recordPlay, user]);
+
+  const handlePlayClick = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    
+    // Allow anyone to play the podcast
+    if (!podcast) return;
+
+    console.log('Play clicked:', { isCurrentlyPlaying });
+    const now = Date.now() / 1000;
+    
+    // Only check cooldown and record plays for authenticated users
+    if (user) {
+      if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN) {
+        console.log('Play cooldown active, waiting...');
+        showToast(`Please wait before playing again`);
+        return;
+      }
+
+      setLastPlayTime(now);
+      setPlayStartTime(now);
+      console.log('Starting playback, time set:', now);
+    }
+
+    playPodcast(podcast);
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -345,8 +414,10 @@ const PodcastPage = () => {
         setIsInPlaylist(true);
         showToast('Added to playlist');
       }
+      // Invalidate both playlist and stats queries
       queryClient.invalidateQueries({ queryKey: ['playlist-status'] });
       queryClient.invalidateQueries({ queryKey: ['playlists'] });
+      queryClient.invalidateQueries({ queryKey: ['podcast-stats', podcast.id] });
     } catch (error) {
       console.error('Error updating playlist:', error);
       showToast('Failed to update playlist');
@@ -381,6 +452,8 @@ const PodcastPage = () => {
         showToast('Added like');
       }
       setIsLiked(!isLiked);
+      // Invalidate the stats query
+      queryClient.invalidateQueries({ queryKey: ['podcast-stats', podcast.id] });
     } catch (error) {
       console.error('Error updating like:', error);
       showToast('Failed to update like');
@@ -423,282 +496,307 @@ const PodcastPage = () => {
   console.log('User ID from podcast:', podcast?.user_id);
 
   return (
-    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {deleteError && (
-        <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-xl">
-          <p className="text-red-400">{deleteError}</p>
+    <div className="min-h-screen pb-32">
+      {/* Background with gradient and pattern */}
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_80%_at_50%_-20%,rgba(120,53,215,0.3),rgba(255,255,255,0))]" />
+      
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 lg:pt-16">
+        {/* Top Info Bar */}
+        <div className="flex items-center justify-between mb-8 text-sm">
+          <div className="flex items-center gap-6">
+            <div>
+              <span className="text-slate-400">PODCAST ID</span>
+              <span className="ml-2 text-sky-400 font-mono">{podcast.id.slice(0, 8)}</span>
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleShare}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              <Share2 size={20} />
+            </button>
+            {canEdit && (
+              <div className="relative">
+                <button 
+                  onClick={() => setShowMoreMenu(!showMoreMenu)}
+                  className="text-slate-400 hover:text-white transition-colors"
+                >
+                  <MoreVertical size={20} />
+                </button>
+                {showMoreMenu && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl bg-slate-800 border border-slate-700 shadow-lg py-1 z-50">
+                    <button
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        setShowEditForm(true);
+                      }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-slate-300 hover:bg-slate-700"
+                    >
+                      <Edit size={16} />
+                      Edit Podcast
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowMoreMenu(false);
+                        handleDeleteClick();
+                      }}
+                      className="flex items-center gap-2 w-full px-4 py-2 text-sm text-red-400 hover:bg-slate-700"
+                    >
+                      <Trash2 size={16} />
+                      Delete Podcast
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-      )}
 
-      <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 overflow-hidden mb-8 shadow-xl">
-        <div className="relative h-64 md:h-96">
-          <img
-            src={podcast.cover_image_url}
-            alt={podcast.title}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-900/95 via-slate-900/70 to-transparent" />
-          
-          {/* Primary Actions */}
-          <div className="absolute top-6 right-6 flex items-center gap-3">
-            {user && (
-              <>
+        {/* Main Content */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Left Column */}
+          <div className="lg:col-span-2 flex flex-col">
+            <div className="flex flex-col md:flex-row gap-8 mb-8">
+              {/* Cover Image */}
+              <div className="w-full md:w-64 aspect-square rounded-2xl overflow-hidden bg-slate-800 relative group">
+                <img 
+                  src={podcast.cover_image_url || '/default-podcast-cover.png'}
+                  alt={podcast.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                />
+                <button
+                  onClick={handlePlayClick}
+                  className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <div className="w-16 h-16 rounded-full bg-fuchsia-500 hover:bg-fuchsia-600 transition-colors flex items-center justify-center text-white">
+                    {isCurrentlyPlaying ? <Pause size={32} /> : <Play size={32} className="ml-1" />}
+                  </div>
+                </button>
+              </div>
+
+              {/* Title and Info */}
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold text-white mb-4">{podcast.title}</h1>
+                <div className="flex flex-wrap gap-6 text-sm text-slate-400 mb-4">
+                  <Link 
+                    to={`/profile/${podcast.user_id}`}
+                    className="flex items-center gap-2 hover:text-white transition-colors"
+                  >
+                    <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-700">
+                      <img 
+                        src={creator?.avatar_url || '/default-avatar.png'} 
+                        alt={creator?.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <span>{creator?.name}</span>
+                  </Link>
+                  <div className="flex items-center gap-2">
+                    <Clock size={16} />
+                    <span>{duration ? `${Math.ceil(duration / 60)} min` : 'Duration not available'}</span>
+                  </div>
+                </div>
+                {/* Stats */}
+                <div className="flex items-center gap-6 mb-4 md:mb-6">
+                  {/* Likes */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/10">
+                      <Heart
+                        className={`h-4 w-4 ${
+                          isLiked ? 'fill-red-500 text-red-500' : 'text-red-500'
+                        }`}
+                      />
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      {stats?.likes ?? 0}
+                    </span>
+                  </div>
+
+                  {/* Plays */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sky-500/10">
+                      <Play className="h-4 w-4 text-sky-500" />
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      {podcast.listen_count ?? 0}
+                    </span>
+                  </div>
+
+                  {/* Bookmarks */}
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-fuchsia-500/10">
+                      <Bookmark
+                        className={`h-4 w-4 ${
+                          isInPlaylist ? 'fill-fuchsia-500 text-fuchsia-500' : 'text-fuchsia-500'
+                        }`}
+                      />
+                    </div>
+                    <span className="text-sm text-slate-400">
+                      {stats?.saves ?? 0}
+                    </span>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {podcast.research_fields?.map((field) => (
+                    <span
+                      key={field}
+                      className="px-3 py-1 rounded-full text-sm bg-slate-800 text-slate-300"
+                    >
+                      {field}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Abstract - Hidden on mobile, shown on desktop */}
+            <div className="hidden lg:block">
+              <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+                <h2 className="text-lg font-semibold text-white mb-4">Abstract</h2>
+                <div className="relative">
+                  <p className="text-slate-300 whitespace-pre-wrap">
+                    {isAbstractExpanded ? podcast.abstract : `${podcast.abstract.slice(0, 600)}...`}
+                  </p>
+                  {podcast.abstract.length > 600 && (
+                    <button
+                      onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
+                      className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"
+                    >
+                      {isAbstractExpanded ? 'Show less' : 'Read more'}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column */}
+          <div className="lg:col-span-1 space-y-4 md:space-y-8">
+            {/* Primary Action */}
+            <button
+              onClick={handlePlayClick}
+              className="flex items-center justify-center gap-2 px-6 py-3 bg-fuchsia-500 hover:bg-fuchsia-600 transition-colors rounded-lg text-white font-medium w-full"
+            >
+              {isCurrentlyPlaying ? (
+                <>
+                  <Pause size={20} /> Pause
+                </>
+              ) : (
+                <>
+                  <Play size={20} /> Play
+                </>
+              )}
+            </button>
+
+            {/* Secondary Actions */}
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
                 <button
                   onClick={handleLikeToggle}
                   disabled={isUpdating}
-                  className={`flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-sm ${
-                    isLiked
-                      ? 'bg-red-500/90 hover:bg-red-600/90'
-                      : 'bg-slate-800/70 hover:bg-slate-700/70'
-                  } transition-colors`}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
+                    isLiked ? 'bg-slate-700 text-fuchsia-400' : 'bg-slate-800 text-slate-300'
+                  } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
                 >
-                  <Heart className={`w-5 h-5 ${isLiked ? 'text-white' : 'text-red-400'}`} />
+                  <Heart size={18} className={isLiked ? 'fill-current' : ''} />
+                  {isLiked ? 'Liked' : 'Like'}
                 </button>
                 <button
                   onClick={handlePlaylistToggle}
                   disabled={isUpdatingPlaylist}
-                  className={`flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-sm ${
-                    isInPlaylist
-                      ? 'bg-fuchsia-500/90 hover:bg-fuchsia-600/90'
-                      : 'bg-slate-800/70 hover:bg-slate-700/70'
-                  } transition-colors`}
+                  className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
+                    isInPlaylist ? 'bg-slate-700 text-sky-400' : 'bg-slate-800 text-slate-300'
+                  } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
                 >
-                  {isInPlaylist ? (
-                    <BookmarkCheck className="w-5 h-5 text-white" />
-                  ) : (
-                    <Bookmark className="w-5 h-5 text-fuchsia-400" />
-                  )}
+                  {isInPlaylist ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
+                  {isInPlaylist ? 'Saved' : 'Save'}
                 </button>
-              </>
-            )}
-          </div>
+              </div>
 
-          {/* More Menu (Mobile) */}
-          {canEdit && (
-            <div className="absolute bottom-6 right-6 sm:hidden">
-              <button
-                onClick={() => setShowMoreMenu(!showMoreMenu)}
-                className="flex items-center justify-center w-10 h-10 rounded-full backdrop-blur-sm bg-slate-800/70 hover:bg-slate-700/70 transition-colors"
-              >
-                <MoreHorizontal className="w-5 h-5 text-slate-300" />
-              </button>
-              {showMoreMenu && (
-                <div className="absolute right-0 bottom-12 mb-2 w-48 bg-slate-800/90 backdrop-blur-sm rounded-xl shadow-lg border border-slate-700/50 overflow-hidden z-50">
-                  <button
-                    onClick={() => {
-                      setShowEditForm(true);
-                      setShowMoreMenu(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-3 text-left text-sm text-slate-300 hover:bg-slate-700/50"
-                  >
-                    <Edit className="w-4 h-4" />
-                    <span>Edit</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      handleDeleteClick();
-                      setShowMoreMenu(false);
-                    }}
-                    className="flex items-center gap-2 w-full px-4 py-3 text-left text-sm text-red-400 hover:bg-slate-700/50"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    <span>Delete</span>
-                  </button>
+              <div className="grid grid-cols-2 gap-3">
+                <button
+                  onClick={handleDownload}
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
+                >
+                  <Download size={18} />
+                  Download
+                </button>
+                <a
+                  href={`https://doi.org/${podcast.doi}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
+                >
+                  <BookOpen size={18} />
+                  View Paper
+                </a>
+              </div>
+            </div>
+
+            {/* Author Info Box */}
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+              <div className="space-y-6">
+                {/* Authors Section */}
+                <div>
+                  <h3 className="text-xs font-medium text-slate-400 mb-2">AUTHORS</h3>
+                  <p className="text-slate-300">
+                    {podcast.authors} ({podcast.publishing_year})
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
-        </div>
 
-        {/* Title and Author Section */}
-        <div className="p-6 md:p-8 border-b border-slate-700/50">
-          {/* Meta Information */}
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-6">
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <Heart className={`w-4 h-4 ${isLiked ? 'fill-red-500 text-red-500' : 'text-red-400'}`} />
-                <span className="sm:inline hidden">{stats?.likes || 0} likes</span>
-                <span className="sm:hidden inline">{stats?.likes || 0}</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm text-slate-300">
-                <ListMusic className="w-4 h-4 text-fuchsia-400" />
-                <span className="sm:inline hidden">{stats?.saves || 0} saves</span>
-                <span className="sm:hidden inline">{stats?.saves || 0}</span>
-              </div>
-            </div>
-            {podcast.user_id && (
-              <Link 
-                to={`/user/${podcast.user_id}`}
-                className="text-fuchsia-400 hover:text-fuchsia-300 transition-colors group flex items-center gap-2 text-sm"
-              >
-                {creator?.avatar_url ? (
-                  <img 
-                    src={creator.avatar_url} 
-                    alt={creator.name}
-                    className="w-6 h-6 rounded-full object-cover"
-                  />
-                ) : (
-                  <div className="w-6 h-6 rounded-full bg-slate-700 flex items-center justify-center">
-                    <Users className="w-4 h-4" />
+                {/* Research Field Section */}
+                <div>
+                  <h3 className="text-xs font-medium text-slate-400 mb-2">RESEARCH FIELD</h3>
+                  <p className="text-slate-300">
+                    {podcast.field_of_research}
+                  </p>
+                </div>
+
+                {/* Keywords Section */}
+                <div>
+                  <h3 className="text-xs font-medium text-slate-400 mb-2">KEYWORDS</h3>
+                  <p className="text-slate-300">
+                    {podcast.keywords}
+                  </p>
+                </div>
+
+                {/* DOI Section */}
+                {podcast.doi && (
+                  <div>
+                    <h3 className="text-xs font-medium text-slate-400 mb-2">DOI</h3>
+                    <a 
+                      href={`https://doi.org/${podcast.doi}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sky-400 hover:text-sky-300 transition-colors break-all"
+                    >
+                      {podcast.doi}
+                    </a>
                   </div>
                 )}
-                <span className="group-hover:underline">
-                  Created by {creator?.name || 'Anonymous User'}
-                </span>
-              </Link>
-            )}
-          </div>
-
-          <h1 className="text-2xl md:text-3xl font-display font-medium mb-4 text-white">{podcast.title}</h1>
-          <div className="flex items-center gap-2">
-            <Users className="w-5 h-5 text-fuchsia-400" />
-            <p className="text-lg text-slate-200">
-              {podcast.authors}
-              <span className="text-slate-400 ml-2">({podcast.publishing_year})</span>
-            </p>
-          </div>
-        </div>
-
-        {/* Audio Player Section */}
-        <div className="p-6 md:p-8 border-b border-slate-700/50">
-          {audioUrl && (
-            <audio
-              ref={audioRef}
-              src={audioUrl}
-              preload="metadata"
-              onError={() => setAudioError('Error loading audio file')}
-            />
-          )}
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <div className="flex-1">
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={progress}
-                  onChange={handleProgressChange}
-                  disabled={!audioUrl || !!audioError}
-                  className={`w-full h-2 rounded-lg appearance-none cursor-pointer ${
-                    audioUrl && !audioError 
-                      ? 'bg-slate-700 [&::-webkit-slider-thumb]:bg-fuchsia-500 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:cursor-pointer [&::-moz-range-thumb]:bg-fuchsia-500 [&::-moz-range-thumb]:rounded-full [&::-moz-range-thumb]:h-4 [&::-moz-range-thumb]:w-4 [&::-moz-range-thumb]:border-0 [&::-moz-range-thumb]:cursor-pointer' 
-                      : 'bg-slate-700/50 cursor-not-allowed'
-                  }`}
-                />
-                <div className="flex justify-between mt-1">
-                  <span className="text-slate-400 text-sm">
-                    {formatTime(duration * (progress / 100))}
-                  </span>
-                  <span className="text-slate-400 text-sm">
-                    {formatTime(duration)}
-                  </span>
-                </div>
               </div>
-              <button
-                onClick={handlePlayPause}
-                className="flex items-center justify-center w-14 h-14 rounded-full bg-fuchsia-500 hover:bg-fuchsia-600 transition-colors"
-              >
-                {isPlaying ? (
-                  <Pause className="w-7 h-7 text-white" />
-                ) : (
-                  <Play className="w-7 h-7 text-white ml-1" />
+            </div>
+          </div>
+
+          {/* Abstract - Shown on mobile, hidden on desktop */}
+          <div className="lg:hidden col-span-1">
+            <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
+              <h2 className="text-lg font-semibold text-white mb-4">Abstract</h2>
+              <div className="relative">
+                <p className="text-slate-300 whitespace-pre-wrap">
+                  {isAbstractExpanded ? podcast.abstract : `${podcast.abstract.slice(0, 600)}...`}
+                </p>
+                {podcast.abstract.length > 600 && (
+                  <button
+                    onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
+                    className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"
+                  >
+                    {isAbstractExpanded ? 'Show less' : 'Read more'}
+                  </button>
                 )}
-              </button>
-            </div>
-
-            {audioError && (
-              <div className="text-red-400 text-sm">
-                {audioError}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Secondary Actions */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between p-6 md:p-8 border-b border-slate-700/50">
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto">
-            <button
-              onClick={handleDownload}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm font-medium text-slate-300 hover:text-white transition-colors w-full sm:w-auto"
-            >
-              <Download className="w-5 h-5" />
-              <span>Download</span>
-            </button>
-            
-            {podcast.doi && (
-              <a
-                href={`https://doi.org/${podcast.doi}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm font-medium text-slate-300 hover:text-white transition-colors w-full sm:w-auto"
-              >
-                <BookOpen className="w-5 h-5" />
-                <span>View Paper</span>
-              </a>
-            )}
-
-            <button
-              onClick={handleShare}
-              className="flex items-center justify-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm font-medium text-slate-300 hover:text-white transition-colors w-full sm:w-auto"
-            >
-              <Share2 className="w-5 h-5" />
-              <span>Share</span>
-            </button>
-          </div>
-
-          {canEdit && (
-            <div className="hidden sm:flex items-center gap-4 mt-4 sm:mt-0">
-              <button
-                onClick={() => setShowEditForm(true)}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800/50 border border-slate-700/50 text-sm font-medium text-slate-300 hover:text-white transition-colors"
-              >
-                <Edit className="w-5 h-5" />
-                <span>Edit</span>
-              </button>
-              <button
-                onClick={handleDeleteClick}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/20 border border-red-500/30 text-sm font-medium text-red-400 hover:text-red-300 transition-colors"
-              >
-                <Trash2 className="w-5 h-5" />
-                <span>Delete</span>
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl border border-slate-700/50 p-6 md:p-8 shadow-xl">
-        <div className="mb-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
-              <div className="flex items-center gap-2">
-                <Calendar className="w-5 h-5 text-fuchsia-400" />
-                <span className="text-slate-300">{podcast.publishing_year}</span>
               </div>
             </div>
-            <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
-              <div className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-fuchsia-400" />
-                <span className="text-slate-300">{podcast.authors}</span>
-              </div>
-            </div>
-            <div className="p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
-              <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-fuchsia-400" />
-                <span className="text-slate-300">{podcast.field_of_research}</span>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
-            <div className="text-sm text-slate-400 mb-1">Keywords</div>
-            <div className="text-slate-300">{podcast.keywords}</div>
-          </div>
-        </div>
-
-        <div>
-          <h2 className="text-xl font-display font-medium mb-4 text-white">Abstract</h2>
-          <div className="prose prose-invert max-w-none">
-            <p className="text-slate-300 leading-relaxed whitespace-pre-line">{podcast.abstract}</p>
           </div>
         </div>
       </div>

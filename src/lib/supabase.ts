@@ -13,12 +13,34 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
     persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true
+    detectSessionInUrl: true,
+    storage: localStorage,
+    storageKey: 'sb-auth'
   },
   global: {
     headers: {
       'X-Client-Info': 'supabase-js'
     }
+  }
+});
+
+// Initialize auth state
+supabase.auth.onAuthStateChange((event, session) => {
+  console.log('Auth state changed:', event, session?.user?.id);
+});
+
+// Get initial session
+supabase.auth.getSession().then(({ data: { session } }) => {
+  console.log('Initial session:', session?.user?.id);
+  if (session) {
+    // Refresh the session if it exists
+    supabase.auth.refreshSession().then(({ data: { session: refreshedSession }, error }) => {
+      if (error) {
+        console.error('Error refreshing session:', error);
+      } else {
+        console.log('Session refreshed:', refreshedSession?.user?.id);
+      }
+    });
   }
 });
 

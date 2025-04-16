@@ -627,7 +627,6 @@ Format: Single paragraph, detailed description`
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {/* Basic Information */}
                   <div className="space-y-4">
-                    <h4 className="text-sm font-medium text-slate-300">Basic Information</h4>
                     <div className="grid grid-cols-1 gap-4">
                       <div>
                         <label className="block text-sm font-medium text-slate-300 mb-1">

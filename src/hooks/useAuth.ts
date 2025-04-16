@@ -1,10 +1,11 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
 import { useEffect } from 'react';
+import { User } from '@supabase/supabase-js';
 
 interface AuthState {
-  user: any | null;
-  setUser: (user: any | null) => void;
+  user: User | null;
+  setUser: (user: User | null) => void;
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -47,7 +48,9 @@ export const useAuthInit = () => {
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
+      if (session) {
+        setUser(session.user);
+      }
       setInitialized(true);
     });
 
@@ -59,5 +62,5 @@ export const useAuthInit = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [setUser, setInitialized]);
 };

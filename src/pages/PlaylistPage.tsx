@@ -106,7 +106,7 @@ export default function PlaylistPage() {
               onClick={() => navigate('/explore')}
               className="px-6 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition-colors"
             >
-              Explore Podcasts
+              Discover Podcasts
             </button>
           </div>
         )}
