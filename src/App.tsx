@@ -8,13 +8,17 @@ import Generate from './pages/Generate';
 import Profile from './pages/Profile';
 import PodcastPage from './pages/PodcastPage';
 import Auth from './pages/Auth';
-import Explore from './pages/Explore';
+import Discover from './pages/Discover';
 import Toast from './components/Toast';
 import PlaylistPage from './pages/PlaylistPage';
 import UserProfile from './pages/UserProfile';
+import TrendingPage from './pages/TrendingPage';
+import MostLikedPage from './pages/MostLikedPage';
+import RecentPage from './pages/RecentPage';
 import { AudioPlayerProvider } from './hooks/useAudioPlayer';
 import StickyPlayer from './components/StickyPlayer';
 import { useAuthInit } from './hooks/useAuth';
+import ScrollToTop from './components/ScrollToTop';
 
 const queryClient = new QueryClient();
 
@@ -28,6 +32,7 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
+        <ScrollToTop />
         <AuthInit>
           <AudioPlayerProvider>
             <div className="min-h-screen bg-slate-950 selection:bg-sky-500/90 selection:text-white">
@@ -39,13 +44,16 @@ function App() {
                 <main className="relative">
                   <Routes>
                     <Route path="/" element={<Home />} />
-                    <Route path="/explore" element={<Explore />} />
+                    <Route path="/discover" element={<Discover />} />
                     <Route path="/generate" element={<Generate />} />
                     <Route path="/profile" element={<Profile />} />
                     <Route path="/podcast/:id" element={<PodcastPage />} />
                     <Route path="/auth" element={<Auth />} />
                     <Route path="/playlist" element={<PlaylistPage />} />
                     <Route path="/user/:userId" element={<UserProfile />} />
+                    <Route path="/trending" element={<TrendingPage />} />
+                    <Route path="/most-liked" element={<MostLikedPage />} />
+                    <Route path="/recent" element={<RecentPage />} />
                   </Routes>
                 </main>
                 <Footer />

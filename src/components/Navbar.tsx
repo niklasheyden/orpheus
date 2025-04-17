@@ -45,7 +45,7 @@ const Navbar = () => {
                 <Home className="mr-2 h-4 w-4 inline-block" />
                 <span>Home</span>
               </Link>
-              <Link to="/explore" className={linkClasses('/explore')}>
+              <Link to="/discover" className={linkClasses('/discover')}>
                 <Compass className="mr-2 h-4 w-4 inline-block" />
                 <span>Discover</span>
               </Link>
@@ -81,7 +81,7 @@ const Navbar = () => {
             ) : (
               <>
                 <Link
-                  to="/auth"
+                  to="/auth?signup=true"
                   className="group relative rounded-full px-4 py-2 text-[13px] text-slate-300 transition-colors hover:text-white bg-slate-800/50 border border-slate-700/50"
                 >
                   Create Account
@@ -154,8 +154,8 @@ const Navbar = () => {
                   <span>Home</span>
                 </Link>
                 <Link
-                  to="/explore"
-                  className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/explore') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
+                  to="/discover"
+                  className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/discover') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
                   onClick={() => setIsMobileMenuOpen(false)}
                 >
                   <Compass className="mr-3 h-5 w-5" />
@@ -198,7 +198,7 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Link
-                      to="/auth"
+                      to="/auth?signup=true"
                       className="flex items-center justify-center px-4 py-3 rounded-lg text-base text-slate-300 hover:text-white bg-slate-800/50 border border-slate-700/50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >

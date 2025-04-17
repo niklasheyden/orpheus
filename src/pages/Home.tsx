@@ -78,26 +78,128 @@ const Home = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden mb-32">
         <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32">
-          <div className="text-center">
-            <h1 className="font-display text-4xl font-medium text-white sm:text-7xl">
+        <div className="relative flex items-center justify-center min-h-[calc(100vh-5rem)] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
+            <div className="text-center lg:text-left">
+              <h1 className="font-display text-4xl font-medium text-white sm:text-6xl">
               Transform Research Papers into{' '}
               <span className="relative whitespace-nowrap">
-                <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
                   Engaging Podcasts
                 </span>
               </span>
             </h1>
-            <p className="mt-6 text-lg text-slate-400 max-w-2xl mx-auto">
+              <p className="mt-6 text-lg text-slate-400">
               Orpheus uses AI to turn academic papers into high-quality audio content, making research more accessible and digestible.
             </p>
             <button
               onClick={handleCtaClick}
-              className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20"
+                className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20"
             >
               <span className="mr-3">Generate a Podcast</span>
-              <Sparkles className="h-6 w-6" />
+                <Sparkles className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="relative">
+              <div className="absolute -inset-4">
+                <div className="w-full h-full max-w-full">
+                  <div className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-sky-400/30 to-indigo-500/30 opacity-50 blur-xl" />
+                  <div className="absolute right-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-indigo-500/30 to-sky-400/30 opacity-50 blur-xl" />
+                </div>
+              </div>
+              <div className="relative min-h-[400px] sm:min-h-[500px] -mt-8 sm:-mt-20">
+                {/* Research Paper Card */}
+                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-48 sm:w-64 bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 sm:p-4 shadow-xl z-20">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
+                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
+                      <FileUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    </div>
+                    <div>
+                      <div className="text-xs sm:text-sm font-medium text-white">Research Paper</div>
+                      <div className="text-[10px] sm:text-xs text-slate-400">Ready for transformation</div>
+                    </div>
+                  </div>
+                  <div className="space-y-1.5 sm:space-y-2">
+                    <div className="h-1.5 sm:h-2 w-full bg-slate-700/50 rounded-full" />
+                    <div className="h-1.5 sm:h-2 w-3/4 bg-slate-700/50 rounded-full" />
+                    <div className="h-1.5 sm:h-2 w-5/6 bg-slate-700/50 rounded-full" />
+                  </div>
+                </div>
+
+                {/* Transformation Animation - Circle Only */}
+                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 sm:w-48 z-30">
+                  <div className="relative">
+                    <div className="absolute inset-0 bg-gradient-to-r from-sky-400/20 to-indigo-500/20 blur-xl rounded-full" />
+                    <div className="relative flex flex-col items-center">
+                      {/* Moving Circle Animation */}
+                      <div className="w-full h-16 flex items-center justify-center">
+                        <div className="relative w-full">
+                          {/* Animated Circle */}
+                          <div className="absolute top-1/2 -translate-y-1/2 animate-move-dot">
+                            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 shadow-lg shadow-sky-400/50 ring-2 ring-sky-400/50 ring-offset-2 ring-offset-slate-900" />
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Podcast Card */}
+                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-56 sm:w-72 z-10">
+                  <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
+                    <div className="p-3 sm:p-4">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
+                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                        </div>
+                        <div>
+                          <div className="text-xs sm:text-sm font-medium text-white">Deep Learning in Healthcare</div>
+                          <div className="text-[10px] sm:text-xs text-slate-400">15 min • Dr. Jane Smith</div>
+                        </div>
+                      </div>
+                      <div className="space-y-3 sm:space-y-4">
+                        <div className="relative">
+                          <div className="absolute inset-0 bg-gradient-to-r from-sky-400/10 to-indigo-500/10 rounded-lg" />
+                          <div className="relative h-8 sm:h-12 rounded-lg bg-slate-900/50 border border-slate-700/50 flex items-center justify-center">
+                            <PlayCircle className="w-6 h-6 sm:w-8 sm:h-8 text-sky-400 hover:text-sky-300 transition-colors cursor-pointer" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <div className="flex-1 h-1 bg-slate-700/50 rounded-full overflow-hidden">
+                              <div className="h-full w-1/3 bg-gradient-to-r from-sky-400 to-indigo-500" />
+                            </div>
+                            <span className="text-[10px] sm:text-xs text-slate-400">5:20</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex gap-1 sm:gap-2">
+                              <div className="h-6 sm:h-8 w-0.5 sm:w-1 bg-sky-400/60 rounded-full" />
+                              <div className="h-8 sm:h-12 w-0.5 sm:w-1 bg-sky-400 rounded-full" />
+                              <div className="h-4 sm:h-6 w-0.5 sm:w-1 bg-sky-400/40 rounded-full" />
+                              <div className="h-7 sm:h-10 w-0.5 sm:w-1 bg-sky-400/80 rounded-full" />
+                              <div className="h-3 sm:h-4 w-0.5 sm:w-1 bg-sky-400/30 rounded-full" />
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-slate-700/50 bg-slate-900/50">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2 sm:gap-3">
+                          <button className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
+                            <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
+                          </button>
+                          <button className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
+                            <ListMusic className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
             </button>
+                        </div>
+                        <div className="text-[10px] sm:text-xs text-slate-400">Generated with Orpheus</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -256,11 +358,24 @@ const Home = () => {
         </div>
         <div className="mt-8 text-center">
           <Link
-            to="/explore"
+            to="/discover"
             className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
           >
-            <span className="mr-3">Discover Podcasts</span>
-            <Compass className="h-5 w-5" />
+            <span className="mr-3">Discover More Podcasts</span>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth={1.5}
+              stroke="currentColor"
+              className="w-4 h-4"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
+              />
+            </svg>
           </Link>
         </div>
       </div>
@@ -394,10 +509,10 @@ const Home = () => {
         <div className="mx-auto max-w-2xl lg:max-w-none">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-medium text-white sm:text-4xl">
-              Showcase Your Research
+              Showcase Your Curiosity
             </h2>
             <p className="mt-4 text-lg text-slate-400">
-              Create your professional profile and connect with other researchers
+              Get your own professional profile page and connect with other researchers
             </p>
           </div>
           
@@ -407,8 +522,8 @@ const Home = () => {
                 <div className="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center mb-4">
                   <User className="w-6 h-6 text-fuchsia-400" />
                 </div>
-                <h3 className="text-lg font-medium text-white mb-2">Your Research Identity</h3>
-                <p className="text-sm text-slate-400">Display your academic status, affiliation, and research interests to build your presence in the research community</p>
+                <h3 className="text-lg font-medium text-white mb-2">Your Research Profile</h3>
+                <p className="text-sm text-slate-400">Display your role, affiliation, and research interests to build your presence in the research community</p>
               </div>
               <div className="flex flex-col items-center text-center">
                 <div className="w-12 h-12 rounded-full bg-fuchsia-500/20 flex items-center justify-center mb-4">
@@ -567,11 +682,24 @@ const Home = () => {
                 <Sparkles className="h-5 w-5" />
               </button>
                     <button
-                      onClick={() => navigate('/explore')}
+                      onClick={() => navigate('/discover')}
                       className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
                     >
-                      <span className="mr-3">Discover Podcasts</span>
-                      <Compass className="h-5 w-5" />
+                      <span className="mr-3">Discover More Podcasts</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        strokeWidth={1.5}
+                        stroke="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
+                        />
+                      </svg>
                     </button>
                   </>
                 )}
@@ -583,5 +711,36 @@ const Home = () => {
     </div>
   );
 };
+
+const styles = `
+@keyframes moveDot {
+  0% {
+    left: -8px;
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  20% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  80% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    left: calc(100% + 8px);
+    opacity: 0;
+    transform: scale(0.8);
+  }
+}
+
+.animate-move-dot {
+  animation: moveDot 3s infinite ease-in-out;
+}
+`
+
+const styleSheet = document.createElement("style")
+styleSheet.innerText = styles
+document.head.appendChild(styleSheet)
 
 export default Home;

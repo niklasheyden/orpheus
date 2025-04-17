@@ -600,8 +600,8 @@ const UserProfile = () => {
 
               {/* Publications Section - Mobile and Desktop */}
               <div className="flex-1 min-w-0">
-                <div className="relative bg-slate-900/40 backdrop-blur-xl rounded-xl border border-slate-700/40 p-4 h-auto lg:h-[400px] flex flex-col">
-                  <div className="flex flex-col sm:flex-row items-center justify-between mb-4 gap-2">
+                <div className="relative bg-slate-900/40 backdrop-blur-xl rounded-xl border border-slate-700/40 h-auto lg:h-[400px] flex flex-col">
+                  <div className="px-4 pt-4 flex flex-col sm:flex-row items-center justify-between mb-4 gap-2 pr-4">
                     <h2 className="text-base font-medium text-white flex items-center whitespace-nowrap">
                       <BookOpen className="w-4 h-4 mr-2 text-purple-400" />
                       {sortMode === 'recent' ? 'Latest Publications' : 'Popular Publications'}
@@ -631,7 +631,7 @@ const UserProfile = () => {
                   </div>
 
                   {/* Mobile Publications - Vertical Layout */}
-                  <div className="md:hidden flex flex-col space-y-4 mb-10 overflow-y-auto flex-grow">
+                  <div className="md:hidden flex flex-col space-y-4 mb-10 overflow-y-auto flex-grow px-4">
                     {isLoadingPodcasts ? (
                       <div className="flex items-center justify-center py-6 px-4">
                         <div className="inline-flex items-center px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
@@ -658,7 +658,7 @@ const UserProfile = () => {
                   {/* Desktop Publications - Horizontal Scroll */}
                   <div className="hidden md:block flex-grow overflow-hidden">
                     <div className="h-full overflow-x-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                      <div className="flex space-x-3 pb-4 h-full" style={{ minWidth: 'min-content' }}>
+                      <div className="flex space-x-3 h-full pl-4" style={{ minWidth: 'min-content' }}>
                         {isLoadingPodcasts ? (
                           <div className="flex items-center justify-center py-6 px-4">
                             <div className="inline-flex items-center px-3 py-1.5 bg-blue-500/10 border border-blue-500/20 rounded-lg">
@@ -682,11 +682,6 @@ const UserProfile = () => {
                         )}
                       </div>
                     </div>
-                    
-                    {/* Gradient Fade - Only show when there are enough publications */}
-                    {(sortedPodcasts?.length || 0) > 2 && (
-                      <div className="absolute right-0 top-0 bottom-0 w-16 bg-gradient-to-l from-[#0B0F15] to-transparent pointer-events-none"></div>
-                    )}
                   </div>
                 </div>
               </div>

@@ -580,7 +580,7 @@ const PodcastPage = () => {
                 <h1 className="text-3xl font-bold text-white mb-4">{podcast.title}</h1>
                 <div className="flex flex-wrap gap-6 text-sm text-slate-400 mb-4">
                   <Link 
-                    to={`/profile/${podcast.user_id}`}
+                    to={`/user/${podcast.user_id}`}
                     className="flex items-center gap-2 hover:text-white transition-colors"
                   >
                     <div className="w-6 h-6 rounded-full overflow-hidden bg-slate-700">
@@ -598,7 +598,7 @@ const PodcastPage = () => {
                   </div>
                 </div>
                 {/* Stats */}
-                <div className="flex items-center gap-6 mb-4 md:mb-6">
+                <div className="flex items-center gap-6 md:mb-6">
                   {/* Likes */}
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-full bg-red-500/10">
@@ -651,7 +651,7 @@ const PodcastPage = () => {
             </div>
 
             {/* Abstract - Hidden on mobile, shown on desktop */}
-            <div className="hidden lg:block">
+            <div className="hidden lg:block mt-4">
               <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
                 <h2 className="text-lg font-semibold text-white mb-4">Abstract</h2>
                 <div className="relative">
