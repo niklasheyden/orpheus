@@ -16,7 +16,6 @@ const PodcastPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const [isPlaying, setIsPlaying] = useState(false);
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
@@ -33,7 +32,7 @@ const PodcastPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showMoreMenu, setShowMoreMenu] = useState(false);
-  const { currentPodcast, isPlaying: audioPlayerIsPlaying, playPodcast } = useAudioPlayer();
+  const { currentPodcast, isPlaying: audioPlayerIsPlaying, playPodcast, togglePlayPause } = useAudioPlayer();
   const [lastPlayTime, setLastPlayTime] = useState<number | null>(null);
   const [playStartTime, setPlayStartTime] = useState<number | null>(null);
   const MINIMUM_PLAY_DURATION = 20; // seconds
@@ -273,23 +272,34 @@ const PodcastPage = () => {
     // Allow anyone to play the podcast
     if (!podcast) return;
 
-    console.log('Play clicked:', { isCurrentlyPlaying });
+    console.log('Play clicked:', { isCurrentlyPlaying, currentPodcast: currentPodcast?.id, podcastId: podcast.id });
     const now = Date.now() / 1000;
     
     // Only check cooldown and record plays for authenticated users
     if (user) {
-      if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN) {
+      if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN && !isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
         console.log('Play cooldown active, waiting...');
         showToast(`Please wait before playing again`);
         return;
       }
 
-      setLastPlayTime(now);
-      setPlayStartTime(now);
-      console.log('Starting playback, time set:', now);
+      // Only set these when starting a completely new play session
+      if (!isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
+        setLastPlayTime(now);
+        setPlayStartTime(now);
+        console.log('Starting new playback, time set:', now);
+      }
     }
 
-    playPodcast(podcast);
+    // If this podcast is currently loaded in the player
+    if (currentPodcast?.id === podcast.id) {
+      console.log('Toggling current podcast');
+      togglePlayPause();
+    } else {
+      // If it's a different podcast or no podcast is playing
+      console.log('Starting new podcast');
+      playPodcast(podcast);
+    }
   };
 
   const handleProgressChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -709,8 +719,8 @@ const PodcastPage = () => {
                     isInPlaylist ? 'bg-slate-700 text-sky-400' : 'bg-slate-800 text-slate-300'
                   } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
                 >
-                  {isInPlaylist ? <BookmarkCheck size={18} /> : <Bookmark size={18} />}
-                  {isInPlaylist ? 'Saved' : 'Save'}
+                  <ListMusic size={18} />
+                  {isInPlaylist ? 'Added to Playlist' : 'Add to Playlist'}
                 </button>
               </div>
 
@@ -722,15 +732,17 @@ const PodcastPage = () => {
                   <Download size={18} />
                   Download
                 </button>
-                <a
-                  href={`https://doi.org/${podcast.doi}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
-                >
-                  <BookOpen size={18} />
-                  View Paper
-                </a>
+                {podcast.doi && (
+                  <a
+                    href={`https://doi.org/${podcast.doi}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
+                  >
+                    <BookOpen size={18} />
+                    View Paper
+                  </a>
+                )}
               </div>
             </div>
 

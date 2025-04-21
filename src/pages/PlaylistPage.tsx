@@ -4,7 +4,7 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../hooks/useAuth';
 import PodcastCard from '../components/PodcastCard';
 import { Loader } from '../components/Loader';
-import { PlayCircle, ListMusic } from 'lucide-react';
+import { PlayCircle, ListMusic, Compass } from 'lucide-react';
 
 interface Podcast {
   id: string;
@@ -103,10 +103,11 @@ export default function PlaylistPage() {
             <h2 className="text-xl font-semibold mb-2">Your playlist is empty</h2>
             <p className="text-gray-400 mb-6">Start adding podcasts to your playlist!</p>
             <button
-              onClick={() => navigate('/explore')}
-              className="px-6 py-2 bg-fuchsia-600 text-white rounded-lg hover:bg-fuchsia-700 transition-colors"
+              onClick={() => navigate('/discover')}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-8 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
             >
-              Discover Podcasts
+              <Compass className="w-5 h-5" />
+              <span>Discover Podcasts</span>
             </button>
           </div>
         )}

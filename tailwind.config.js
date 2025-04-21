@@ -96,10 +96,28 @@ export default {
         'background-shine': {
           from: { backgroundPosition: '0 0' },
           to: { backgroundPosition: '-200% 0' }
+        },
+        'tilt': {
+          '0%, 50%, 100%': {
+            transform: 'rotate(0deg)',
+          },
+          '25%': {
+            transform: 'rotate(1deg)',
+          },
+          '75%': {
+            transform: 'rotate(-1deg)',
+          }
+        },
+        'ripple-pulse': {
+          '0%': { transform: 'scale(0.95)', opacity: '0.9' },
+          '50%': { transform: 'scale(1.5)', opacity: '0.4' },
+          '100%': { transform: 'scale(2)', opacity: '0' }
         }
       },
       animation: {
-        'background-shine': 'background-shine 2s linear infinite'
+        'background-shine': 'background-shine 2s linear infinite',
+        'tilt': 'tilt 10s infinite linear',
+        'ripple-pulse': 'ripple-pulse 2.5s ease-out infinite'
       }
     },
   },

@@ -1,15 +1,22 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { AudioWaveform, Home, Compass, Sparkles, User, LogOut, Menu, X, ListMusic } from 'lucide-react';
-import { useAuth } from '../hooks/useAuth';
+import { Session } from '@supabase/supabase-js';
+import { supabase } from '../lib/supabase';
 
-const Navbar = () => {
-  const { user, signOut } = useAuth();
+interface NavbarProps {
+  session: Session | null;
+}
+
+const Navbar = ({ session }: NavbarProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const isActive = (path: string) => {
+    if (path === '/profile' && location.pathname.startsWith('/user/')) {
+      return true;
+    }
     return location.pathname === path;
   };
 
@@ -21,8 +28,8 @@ const Navbar = () => {
     }
   `;
 
-  const handleSignOut = () => {
-    signOut();
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
     setIsMobileMenuOpen(false);
     navigate('/');
   };
@@ -32,25 +39,39 @@ const Navbar = () => {
       <div className="relative z-40 mx-auto max-w-7xl px-4 lg:px-8">
         <div className="relative flex items-center justify-between py-4">
           <div className="flex items-center space-x-8">
-            <Link to="/" className="flex items-center space-x-3">
-              <AudioWaveform className="h-8 w-8 text-sky-400" />
-              <span className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-500">
+            <Link to="/" className="flex items-center space-x-2 group">
+              <div className="relative w-6 h-6">
+                {/* Center dot */}
+                <div className="absolute inset-[35%] rounded-full bg-sky-400"></div>
+                
+                {/* Static circles */}
+                <div className="absolute inset-[15%] rounded-full border border-sky-400/80"></div>
+                <div className="absolute inset-[5%] rounded-full border border-sky-400/60"></div>
+                <div className="absolute inset-0 rounded-full border border-sky-400/40"></div>
+                <div className="absolute -inset-1 rounded-full border border-sky-400/30"></div>
+                <div className="absolute -inset-2 rounded-full border border-sky-400/20"></div>
+                <div className="absolute -inset-3 rounded-full border border-sky-400/10"></div>
+                <div className="absolute -inset-4 rounded-full border border-sky-400/5"></div>
+
+                {/* Animated ripples */}
+                <div className="absolute inset-0 rounded-full border border-sky-400/60 animate-ripple-pulse"></div>
+                <div className="absolute inset-0 rounded-full border border-sky-400/50 animate-ripple-pulse" style={{ animationDelay: '0.8s' }}></div>
+                <div className="absolute inset-0 rounded-full border border-sky-400/40 animate-ripple-pulse" style={{ animationDelay: '1.6s' }}></div>
+                <div className="absolute inset-0 rounded-full border border-sky-400/30 animate-ripple-pulse" style={{ animationDelay: '2s' }}></div>
+              </div>
+              <span className="text-lg font-bold bg-clip-text text-transparent bg-gradient-to-r from-sky-400 to-indigo-400">
                 Orpheus
               </span>
             </Link>
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex md:items-center md:space-x-6">
-              <Link to="/" className={linkClasses('/')}>
-                <Home className="mr-2 h-4 w-4 inline-block" />
-                <span>Home</span>
-              </Link>
-              <Link to="/discover" className={linkClasses('/discover')}>
-                <Compass className="mr-2 h-4 w-4 inline-block" />
-                <span>Discover</span>
-              </Link>
-              {user && (
+              {session && (
                 <>
+                  <Link to="/" className={linkClasses('/')}>
+                    <Home className="mr-2 h-4 w-4 inline-block" />
+                    <span>Home</span>
+                  </Link>
                   <Link to="/playlist" className={linkClasses('/playlist')}>
                     <ListMusic className="mr-2 h-4 w-4 inline-block" />
                     <span>Playlist</span>
@@ -59,7 +80,7 @@ const Navbar = () => {
                     <Sparkles className="mr-2 h-4 w-4 inline-block" />
                     <span>Generate</span>
                   </Link>
-                  <Link to={user ? `/user/${user.id}` : '/profile'} className={linkClasses('/profile')}>
+                  <Link to={`/user/${session.user.id}`} className={linkClasses('/profile')}>
                     <User className="mr-2 h-4 w-4 inline-block" />
                     <span>Profile</span>
                   </Link>
@@ -70,7 +91,7 @@ const Navbar = () => {
 
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-3">
-            {user ? (
+            {session ? (
               <button
                 onClick={handleSignOut}
                 className="relative -mx-3 -my-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors delay-150 hover:text-slate-100 hover:delay-[0ms]"
@@ -81,17 +102,17 @@ const Navbar = () => {
             ) : (
               <>
                 <Link
-                  to="/auth?signup=true"
-                  className="group relative rounded-full px-4 py-2 text-[13px] text-slate-300 transition-colors hover:text-white bg-slate-800/50 border border-slate-700/50"
+                  to="/auth"
+                  className="group relative rounded-full px-4 py-2 text-[13px] text-slate-300 transition-all hover:text-slate-100 bg-slate-800/50 border border-slate-700/50"
                 >
-                  Create Account
+                  Sign In
                 </Link>
                 <Link
-                  to="/auth"
+                  to="/waitlist"
                   className="group relative rounded-full bg-gradient-to-r from-sky-400/80 to-indigo-500/80 px-4 py-2 text-[13px] text-white transition-all hover:text-sm"
                 >
                   <span className="absolute inset-0 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <span className="relative">Sign In</span>
+                  <span className="relative">Get Started</span>
                 </Link>
               </>
             )}
@@ -145,24 +166,16 @@ const Navbar = () => {
             {/* Menu items */}
             <div className="flex-1 px-6 py-6">
               <div className="flex flex-col space-y-6 bg-slate-900 rounded-xl p-4">
-                <Link
-                  to="/"
-                  className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Home className="mr-3 h-5 w-5" />
-                  <span>Home</span>
-                </Link>
-                <Link
-                  to="/discover"
-                  className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/discover') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                >
-                  <Compass className="mr-3 h-5 w-5" />
-                  <span>Discover</span>
-                </Link>
-                {user ? (
+                {session ? (
                   <>
+                    <Link
+                      to="/"
+                      className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Home className="mr-3 h-5 w-5" />
+                      <span>Home</span>
+                    </Link>
                     <Link
                       to="/playlist"
                       className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/playlist') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
@@ -180,7 +193,7 @@ const Navbar = () => {
                       <span>Generate</span>
                     </Link>
                     <Link
-                      to={user ? `/user/${user.id}` : '/profile'}
+                      to={`/user/${session.user.id}`}
                       className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/profile') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
@@ -198,18 +211,18 @@ const Navbar = () => {
                 ) : (
                   <>
                     <Link
-                      to="/auth?signup=true"
+                      to="/auth"
                       className="flex items-center justify-center px-4 py-3 rounded-lg text-base text-slate-300 hover:text-white bg-slate-800/50 border border-slate-700/50"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Create Account
+                      Sign In
                     </Link>
                     <Link
-                      to="/auth"
+                      to="/waitlist"
                       className="flex items-center justify-center px-4 py-3 rounded-lg text-base text-white bg-gradient-to-r from-sky-400/80 to-indigo-500/80"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Sign In
+                      Get Started
                     </Link>
                   </>
                 )}

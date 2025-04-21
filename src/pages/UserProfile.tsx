@@ -26,11 +26,14 @@ import {
   Users,
   BookText,
   TrendingUp,
-  Zap
+  Zap,
+  Plus,
+  Compass
 } from 'lucide-react';
 import type { Profile, Podcast } from '../lib/types';
 import PodcastCard from '../components/PodcastCard';
 import EditProfileModal from '../components/EditProfileModal';
+import { Link } from 'react-router-dom';
 
 // Banner backgrounds inspired by scientific themes
 const BANNER_BACKGROUNDS = [
@@ -75,6 +78,27 @@ const getStatusColor = (status: string | null): { text: string, dot: string } =>
       return { text: 'text-emerald-400', dot: 'bg-emerald-500' };
   }
 };
+
+const EmptyPublications = () => (
+  <div className="flex flex-col items-center justify-center w-full h-full min-h-[300px] -translate-y-8">
+    <Link
+      to="/generate"
+      className="inline-flex items-center gap-2 w-[280px] justify-center bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
+    >
+      <Plus className="w-5 h-5" />
+      <span>Create Your First Podcast</span>
+    </Link>
+    {/* Temporarily hidden - Discover Podcasts button
+    <Link
+      to="/discover"
+      className="inline-flex items-center gap-2 w-[280px] justify-center bg-slate-800/80 backdrop-blur-sm text-slate-300 hover:text-white rounded-full px-6 py-3 font-medium border border-slate-700/50 hover:bg-slate-800 transition-all"
+    >
+      <Compass className="w-5 h-5" />
+      <span>Discover Podcasts</span>
+    </Link>
+    */}
+  </div>
+);
 
 const UserProfile = () => {
   const { userId } = useParams();
@@ -324,7 +348,11 @@ const UserProfile = () => {
                       animate-fade-in"
                     style={{ animationDelay: `${index * 100}ms` }}
                   >
-                    {interest.trim()}
+                    {interest.trim()
+                      .replace(/[\[\]"']/g, '') // Remove brackets and quotes
+                      .split(' ')
+                      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                      .join(' ')}
                   </span>
                 )) || (
                   <span className="flex-none px-4 py-2 bg-slate-900/60 backdrop-blur-lg text-slate-400 text-sm rounded-full ring-1 ring-slate-700/50">
@@ -343,7 +371,7 @@ const UserProfile = () => {
           <div className="md:hidden w-full mb-6">
             <div className="grid grid-cols-2 gap-2">
               <div className="px-4 py-3 bg-slate-900/40 backdrop-blur-xl border border-slate-700/40 rounded-lg">
-                <div className="text-xs uppercase tracking-wider text-slate-400">Status</div>
+                <div className="text-xs uppercase tracking-wider text-slate-400">Role</div>
                 <div className="mt-1 flex items-center">
                   {(() => {
                     const statusColor = getStatusColor(profile?.status || null);
@@ -404,7 +432,7 @@ const UserProfile = () => {
                   <div className="mt-0.5 font-mono text-sm text-blue-400">{userId?.substring(0, 8).toUpperCase()}</div>
                 </div>
                 <div className="px-4">
-                  <div className="text-xs uppercase tracking-wider text-slate-400">Status</div>
+                  <div className="text-xs uppercase tracking-wider text-slate-400">Role</div>
                   <div className="mt-0.5 flex items-center">
                     {(() => {
                       const statusColor = getStatusColor(profile?.status || null);
@@ -509,7 +537,11 @@ const UserProfile = () => {
                     animate-fade-in"
                   style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {interest.trim()}
+                  {interest.trim()
+                    .replace(/[\[\]"']/g, '') // Remove brackets and quotes
+                    .split(' ')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .join(' ')}
                 </span>
               )) || (
                 <span className="px-4 py-2 bg-slate-900/60 backdrop-blur-lg text-slate-400 text-sm rounded-full ring-1 ring-slate-700/50">
@@ -530,7 +562,7 @@ const UserProfile = () => {
                     About
                   </h2>
                   <div className="flex-grow overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                    <p className="text-slate-300 text-sm leading-relaxed mb-4 md:mb-6">
+                    <p className="text-slate-300 text-sm leading-relaxed mb-4">
                       {profile?.bio || 'This researcher has not added a bio yet.'}
                     </p>
                   </div>
@@ -639,13 +671,8 @@ const UserProfile = () => {
                           <span className="text-blue-400 text-xs">Loading</span>
                         </div>
                       </div>
-                    ) : !sortedPodcasts?.length ? (
-                      <div className="flex flex-col items-center justify-center py-6 px-4 bg-slate-900/50 backdrop-blur-sm rounded-xl ring-1 ring-slate-800/60">
-                        <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center mb-2">
-                          <BookOpen className="w-5 h-5 text-slate-600" />
-                        </div>
-                        <p className="text-slate-400 text-xs">No publications yet</p>
-                      </div>
+                    ) : userPodcasts?.length === 0 ? (
+                      <EmptyPublications />
                     ) : (
                       sortedPodcasts.map(podcast => (
                         <div key={podcast.id} className="w-full">
@@ -666,13 +693,8 @@ const UserProfile = () => {
                               <span className="text-blue-400 text-xs">Loading</span>
                             </div>
                           </div>
-                        ) : !sortedPodcasts?.length ? (
-                          <div className="flex flex-col items-center justify-center py-6 px-4 bg-slate-900/50 backdrop-blur-sm rounded-xl ring-1 ring-slate-800/60">
-                            <div className="w-10 h-10 rounded-lg bg-slate-800/50 flex items-center justify-center mb-2">
-                              <BookOpen className="w-5 h-5 text-slate-600" />
-                            </div>
-                            <p className="text-slate-400 text-xs">No publications yet</p>
-                          </div>
+                        ) : userPodcasts?.length === 0 ? (
+                          <EmptyPublications />
                         ) : (
                           sortedPodcasts.map(podcast => (
                             <div key={podcast.id} className="flex-none w-[280px]">

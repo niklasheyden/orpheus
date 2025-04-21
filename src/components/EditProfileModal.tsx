@@ -303,7 +303,7 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, isOpen, on
                 
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-slate-300">
-                    Status
+                    Role
                   </label>
                   <select
                     id="status"

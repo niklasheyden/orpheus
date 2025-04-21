@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload, TrendingUp, Lock, User, ListMusic, BookOpen, Users, PlayCircle } from 'lucide-react';
+import { Headphones, Share2, Sparkles, Search, FileUp, AudioWaveform as Waveform, ChevronDown, Filter, Compass, Mic, Upload, TrendingUp, Lock, User, ListMusic, BookOpen, Users, PlayCircle, Plus, ArrowRight } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 import { supabase } from '../lib/supabase';
 import { useQuery } from '@tanstack/react-query';
@@ -17,6 +17,8 @@ const Home = () => {
   const [podcasts, setPodcasts] = useState<Podcast[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showFilterDropdown, setShowFilterDropdown] = useState(false);
+  const [showHeroVisual, setShowHeroVisual] = useState(false);
+  const [showDiscoverSection, setShowDiscoverSection] = useState(false);
 
   const handleCtaClick = () => {
     if (user) {
@@ -55,6 +57,26 @@ const Home = () => {
     retryDelay: 1000
   });
 
+  const { data: randomPodcast } = useQuery<Podcast>({
+    queryKey: ['random-podcast'],
+    queryFn: async () => {
+      try {
+        const { data, error } = await supabase
+          .from('podcasts')
+          .select('*')
+          .eq('is_public', true)
+          .limit(1)
+          .single();
+          
+        if (error) throw error;
+        return data;
+      } catch (error) {
+        console.error('Error fetching random podcast:', error);
+        throw error;
+      }
+    }
+  });
+
   useEffect(() => {
     if (podcastsData) {
       setPodcasts(podcastsData);
@@ -82,122 +104,70 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="text-center lg:text-left">
               <h1 className="font-display text-4xl font-medium text-white sm:text-6xl">
-              Transform Research Papers into{' '}
-              <span className="relative whitespace-nowrap">
+                Turn Research Papers into{' '}
+                <span className="relative whitespace-nowrap">
                   <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
-                  Engaging Podcasts
+                    Engaging Podcasts
+                  </span>
                 </span>
-              </span>
-            </h1>
+              </h1>
               <p className="mt-6 text-lg text-slate-400">
-              Orpheus uses AI to turn academic papers into high-quality audio content, making research more accessible and digestible.
-            </p>
-            <button
-              onClick={handleCtaClick}
+                Orpheus uses AI to turn academic papers into high-quality audio content, making research more accessible and digestible.
+              </p>
+              <Link
+                to="/waitlist"
                 className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20"
-            >
-              <span className="mr-3">Generate a Podcast</span>
+              >
+                <span className="mr-3">Generate a Podcast</span>
                 <Sparkles className="h-6 w-6" />
-              </button>
+              </Link>
             </div>
-            <div className="relative">
+
+            <div className="relative flex items-center justify-center">
+              {/* Background gradient circles */}
               <div className="absolute -inset-4">
                 <div className="w-full h-full max-w-full">
                   <div className="absolute left-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-sky-400/30 to-indigo-500/30 opacity-50 blur-xl" />
                   <div className="absolute right-1/4 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full bg-gradient-to-r from-indigo-500/30 to-sky-400/30 opacity-50 blur-xl" />
                 </div>
               </div>
-              <div className="relative min-h-[400px] sm:min-h-[500px] -mt-8 sm:-mt-20">
-                {/* Research Paper Card */}
-                <div className="absolute left-0 top-1/2 -translate-y-1/2 w-48 sm:w-64 bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-700/50 p-3 sm:p-4 shadow-xl z-20">
-                  <div className="flex items-center gap-2 sm:gap-3 mb-2 sm:mb-3">
-                    <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
-                      <FileUp className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </div>
-                    <div>
-                      <div className="text-xs sm:text-sm font-medium text-white">Research Paper</div>
-                      <div className="text-[10px] sm:text-xs text-slate-400">Ready for transformation</div>
-                    </div>
-                  </div>
-                  <div className="space-y-1.5 sm:space-y-2">
-                    <div className="h-1.5 sm:h-2 w-full bg-slate-700/50 rounded-full" />
-                    <div className="h-1.5 sm:h-2 w-3/4 bg-slate-700/50 rounded-full" />
-                    <div className="h-1.5 sm:h-2 w-5/6 bg-slate-700/50 rounded-full" />
-                  </div>
-                </div>
 
-                {/* Transformation Animation - Circle Only */}
-                <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-32 sm:w-48 z-30">
-                  <div className="relative">
-                    <div className="absolute inset-0 bg-gradient-to-r from-sky-400/20 to-indigo-500/20 blur-xl rounded-full" />
-                    <div className="relative flex flex-col items-center">
-                      {/* Moving Circle Animation */}
-                      <div className="w-full h-16 flex items-center justify-center">
-                        <div className="relative w-full">
-                          {/* Animated Circle */}
-                          <div className="absolute top-1/2 -translate-y-1/2 animate-move-dot">
-                            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 shadow-lg shadow-sky-400/50 ring-2 ring-sky-400/50 ring-offset-2 ring-offset-slate-900" />
-                          </div>
-                        </div>
-                      </div>
+              {/* Podcast card */}
+              <div className="relative w-full max-w-md">
+                {randomPodcast && (
+                  <>
+                    <PodcastCard podcast={randomPodcast} />
+                    {/* Play button indicator */}
+                    <div className="absolute -bottom-6 right-8 transform flex items-start gap-3">
+                      <span className="text-sm text-fuchsia-400/70 mt-5">
+                        Listen to a sample
+                      </span>
+                      {/* Curved arrow */}
+                      <svg 
+                        width="80" 
+                        height="32" 
+                        viewBox="0 0 80 32" 
+                        className="text-fuchsia-400/70"
+                      >
+                        <path 
+                          d="M0,32 C20,32 40,24 60,0" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          fill="none" 
+                          strokeDasharray="4 4"
+                          className="animate-pulse"
+                        />
+                        <path 
+                          d="M52,4 L60,0 L58,10" 
+                          stroke="currentColor" 
+                          strokeWidth="2" 
+                          fill="none"
+                          className="animate-pulse"
+                        />
+                      </svg>
                     </div>
-                  </div>
-                </div>
-
-                {/* Podcast Card */}
-                <div className="absolute right-0 top-1/2 -translate-y-1/2 w-56 sm:w-72 z-10">
-                  <div className="bg-slate-800/90 backdrop-blur-sm rounded-xl border border-slate-700/50 overflow-hidden">
-                    <div className="p-3 sm:p-4">
-                      <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-                        <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center">
-                          <Headphones className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                        </div>
-                        <div>
-                          <div className="text-xs sm:text-sm font-medium text-white">Deep Learning in Healthcare</div>
-                          <div className="text-[10px] sm:text-xs text-slate-400">15 min • Dr. Jane Smith</div>
-                        </div>
-                      </div>
-                      <div className="space-y-3 sm:space-y-4">
-                        <div className="relative">
-                          <div className="absolute inset-0 bg-gradient-to-r from-sky-400/10 to-indigo-500/10 rounded-lg" />
-                          <div className="relative h-8 sm:h-12 rounded-lg bg-slate-900/50 border border-slate-700/50 flex items-center justify-center">
-                            <PlayCircle className="w-6 h-6 sm:w-8 sm:h-8 text-sky-400 hover:text-sky-300 transition-colors cursor-pointer" />
-                          </div>
-                        </div>
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-2">
-                            <div className="flex-1 h-1 bg-slate-700/50 rounded-full overflow-hidden">
-                              <div className="h-full w-1/3 bg-gradient-to-r from-sky-400 to-indigo-500" />
-                            </div>
-                            <span className="text-[10px] sm:text-xs text-slate-400">5:20</span>
-                          </div>
-                          <div className="flex justify-between items-center">
-                            <div className="flex gap-1 sm:gap-2">
-                              <div className="h-6 sm:h-8 w-0.5 sm:w-1 bg-sky-400/60 rounded-full" />
-                              <div className="h-8 sm:h-12 w-0.5 sm:w-1 bg-sky-400 rounded-full" />
-                              <div className="h-4 sm:h-6 w-0.5 sm:w-1 bg-sky-400/40 rounded-full" />
-                              <div className="h-7 sm:h-10 w-0.5 sm:w-1 bg-sky-400/80 rounded-full" />
-                              <div className="h-3 sm:h-4 w-0.5 sm:w-1 bg-sky-400/30 rounded-full" />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="px-3 sm:px-4 py-2 sm:py-3 border-t border-slate-700/50 bg-slate-900/50">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 sm:gap-3">
-                          <button className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
-                            <Share2 className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-                          </button>
-                          <button className="p-1 sm:p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 transition-colors">
-                            <ListMusic className="w-3 h-3 sm:w-4 sm:h-4 text-slate-400" />
-            </button>
-                        </div>
-                        <div className="text-[10px] sm:text-xs text-slate-400">Generated with Orpheus</div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -257,128 +227,130 @@ const Home = () => {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
-        <div className="text-center mb-12">
-          <h2 className="font-display text-3xl font-medium text-white">
-            Discover the Latest Research Podcasts
-          </h2>
-          <p className="mt-4 text-lg text-slate-400">
-            Browse through our collection of AI-generated research podcasts
-          </p>
-        </div>
+      {showDiscoverSection && (
+        <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
+          <div className="text-center mb-12">
+            <h2 className="font-display text-3xl font-medium text-white">
+              Discover the Latest Research Podcasts
+            </h2>
+            <p className="mt-4 text-lg text-slate-400">
+              Browse through our collection of AI-generated research podcasts
+            </p>
+          </div>
 
-        <div className="mb-12">
-          <div className="flex flex-col sm:flex-row gap-4">
-            <div className="flex-1">
-                <input
-                  type="text"
-                  placeholder="Search podcasts..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
-                />
-              </div>
-            <div className="relative">
-              <button
-                onClick={() => setShowFilterDropdown(!showFilterDropdown)}
-                className="w-full sm:w-auto px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center justify-between gap-2"
-              >
-                <span>{selectedField || 'All Fields'}</span>
-                <ChevronDown className="w-4 h-4" />
-              </button>
-              
-              {showFilterDropdown && (
-                <div className="absolute right-0 mt-1 w-64 bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-700/50 z-10 max-h-96 overflow-y-auto">
-                  <div className="p-2">
-                    <button
-                      onClick={() => {
-                        setSelectedField(null);
-                        setShowFilterDropdown(false);
-                      }}
-                      className={`w-full text-left px-3 py-2 rounded-full text-sm ${
-                        selectedField === null ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-slate-300 hover:bg-slate-700/50'
-                      }`}
-                    >
-                      All Fields
-                    </button>
-                    
-                    {RESEARCH_FIELD_CATEGORIES.map((category) => (
-                      <div key={category} className="mt-2">
-                        <div className="px-3 py-1 text-xs font-medium text-slate-400 uppercase">{category}</div>
-                        {RESEARCH_FIELDS.filter(field => field.category === category).map((field) => {
-                          const Icon = field.icon;
-                          return (
+          <div className="mb-12">
+            <div className="flex flex-col sm:flex-row gap-4">
+              <div className="flex-1">
+                  <input
+                    type="text"
+                    placeholder="Search podcasts..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50"
+                  />
+                </div>
+              <div className="relative">
+                <button
+                  onClick={() => setShowFilterDropdown(!showFilterDropdown)}
+                  className="w-full sm:w-auto px-4 py-2.5 bg-slate-800/50 border border-slate-700/50 rounded-xl text-slate-300 hover:text-white transition-colors flex items-center justify-between gap-2"
+                >
+                  <span>{selectedField || 'All Fields'}</span>
+                  <ChevronDown className="w-4 h-4" />
+                </button>
+                
+                {showFilterDropdown && (
+                  <div className="absolute right-0 mt-1 w-64 bg-slate-800/90 backdrop-blur-sm rounded-2xl shadow-lg border border-slate-700/50 z-10 max-h-96 overflow-y-auto">
+                    <div className="p-2">
                       <button
-                              key={field.id}
-                              onClick={() => {
-                                setSelectedField(field.name);
-                                setShowFilterDropdown(false);
-                              }}
-                              className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-full text-sm ${
-                                selectedField === field.name ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-slate-300 hover:bg-slate-700/50'
-                              }`}
-                            >
-                              <Icon size={16} className="text-fuchsia-400" />
-                              {field.name}
+                        onClick={() => {
+                          setSelectedField(null);
+                          setShowFilterDropdown(false);
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-full text-sm ${
+                          selectedField === null ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-slate-300 hover:bg-slate-700/50'
+                        }`}
+                      >
+                        All Fields
                       </button>
-                          );
-                        })}
-                      </div>
-                    ))}
+                      
+                      {RESEARCH_FIELD_CATEGORIES.map((category) => (
+                        <div key={category} className="mt-2">
+                          <div className="px-3 py-1 text-xs font-medium text-slate-400 uppercase">{category}</div>
+                          {RESEARCH_FIELDS.filter(field => field.category === category).map((field) => {
+                            const Icon = field.icon;
+                            return (
+                        <button
+                                key={field.id}
+                                onClick={() => {
+                                  setSelectedField(field.name);
+                                  setShowFilterDropdown(false);
+                                }}
+                                className={`w-full text-left flex items-center gap-2 px-3 py-2 rounded-full text-sm ${
+                                  selectedField === field.name ? 'bg-fuchsia-500/20 text-fuchsia-300' : 'text-slate-300 hover:bg-slate-700/50'
+                                }`}
+                              >
+                                <Icon size={16} className="text-fuchsia-400" />
+                                {field.name}
+                        </button>
+                            );
+                          })}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
+                    </div>
                   </div>
-                </div>
 
-          {/* Quick filters */}
-          <div className="flex flex-wrap gap-2 mt-6 sm:mt-2">
-            <span className="text-sm text-slate-400 mr-2">Quick filters:</span>
-            {quickFilters.map((filter) => (
-                  <button
-                key={filter.name}
-                onClick={() => setSelectedField(selectedField === filter.name ? null : filter.name)}
-                className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
-                  ${selectedField === filter.name
-                    ? 'bg-fuchsia-500 text-white'
-                    : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700/50'
-                  }`}
-              >
-                {filter.name}
-                  </button>
+            {/* Quick filters */}
+            <div className="flex flex-wrap gap-2 mt-6 sm:mt-2">
+              <span className="text-sm text-slate-400 mr-2">Quick filters:</span>
+              {quickFilters.map((filter) => (
+                    <button
+                  key={filter.name}
+                  onClick={() => setSelectedField(selectedField === filter.name ? null : filter.name)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium transition-colors
+                    ${selectedField === filter.name
+                      ? 'bg-fuchsia-500 text-white'
+                      : 'bg-slate-800/50 text-slate-300 hover:bg-slate-700/50 border border-slate-700/50'
+                    }`}
+                >
+                  {filter.name}
+                    </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Podcasts Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {podcasts.slice(0, 3).map((podcast) => (
+              <PodcastCard key={podcast.id} podcast={podcast} />
             ))}
           </div>
-        </div>
-
-        {/* Podcasts Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {podcasts.slice(0, 3).map((podcast) => (
-            <PodcastCard key={podcast.id} podcast={podcast} />
-          ))}
-        </div>
-        <div className="mt-8 text-center">
-          <Link
-            to="/discover"
-            className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
-          >
-            <span className="mr-3">Discover More Podcasts</span>
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={1.5}
-              stroke="currentColor"
-              className="w-4 h-4"
+          <div className="mt-8 text-center">
+            <Link
+              to="/discover"
+              className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
-              />
-            </svg>
-          </Link>
+              <span className="mr-3">Discover More Podcasts</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth={1.5}
+                stroke="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
+                />
+              </svg>
+            </Link>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Private Research Podcasts Feature Section */}
       <div className="relative mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 mb-40">
@@ -665,22 +637,22 @@ const Home = () => {
               </p>
               <div className="mt-8 flex flex-col sm:flex-row gap-4 justify-center">
                 {user ? (
-                  <button
-                    onClick={() => navigate('/generate')}
+                  <Link
+                    to="/waitlist"
                     className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400/80 to-indigo-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-sky-400 hover:to-indigo-500 hover:shadow-sky-400/20"
                   >
                     <span className="mr-3">Generate Your First Podcast</span>
                     <Sparkles className="h-5 w-5" />
-                  </button>
+                  </Link>
                 ) : (
                   <>
-              <button
-                      onClick={() => navigate('/auth')}
-                      className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400/80 to-indigo-500/80 px-6 py-3 text-sm font-semibold text-white shadow-lg transition-all hover:from-sky-400 hover:to-indigo-500 hover:shadow-sky-400/20"
+              <Link
+                      to="/waitlist"
+                      className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-lg px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
               >
-                <span className="mr-3">Get Started</span>
-                <Sparkles className="h-5 w-5" />
-              </button>
+                Get Started
+                <ArrowRight className="w-5 h-5" />
+              </Link>
                     <button
                       onClick={() => navigate('/discover')}
                       className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
@@ -700,7 +672,7 @@ const Home = () => {
                           d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
                         />
                       </svg>
-                    </button>
+              </button>
                   </>
                 )}
               </div>

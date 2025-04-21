@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { supabase } from '../lib/supabase';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '@supabase/supabase-js';
+import { useNavigate } from 'react-router-dom';
+import type { Session } from '@supabase/supabase-js';
 
 interface AuthState {
   user: User | null;
@@ -44,13 +46,12 @@ export const useAuth = create<AuthState>((set) => ({
 // Hook to initialize auth state
 export const useAuthInit = () => {
   const { setUser, setInitialized } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Get initial session
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        setUser(session.user);
-      }
+      setUser(session?.user ?? null);
       setInitialized(true);
     });
 
@@ -62,5 +63,5 @@ export const useAuthInit = () => {
     });
 
     return () => subscription.unsubscribe();
-  }, [setUser, setInitialized]);
+  }, [setUser, setInitialized, navigate]);
 };

@@ -752,41 +752,57 @@ Format: Single paragraph, detailed description`
                   {/* Privacy Settings */}
                   <div className="space-y-4">
                     <h4 className="text-sm font-medium text-slate-300">Privacy Settings</h4>
-                    <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
-                      <div className="flex items-center gap-3">
-                        {formData.isPublic ? (
-                          <Globe className="w-5 h-5 text-fuchsia-400" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-slate-400" />
-                        )}
-                        <div>
-                          <p className="text-sm font-medium text-white">
-                            {formData.isPublic ? 'Public Podcast' : 'Private Podcast'}
-                          </p>
-                          <p className="text-xs text-slate-400">
-                            {formData.isPublic
-                              ? 'Anyone can discover and listen to your podcast'
-                              : 'Only you can see and access this podcast'}
-                          </p>
+                    <div className="flex flex-col space-y-4">
+                      <div className="flex items-center justify-between p-4 bg-slate-700/30 rounded-xl border border-slate-700/50">
+                        <div className="flex items-center gap-3">
+                          {formData.isPublic ? (
+                            <Globe className="w-5 h-5 text-fuchsia-400" />
+                          ) : (
+                            <Lock className="w-5 h-5 text-slate-400" />
+                          )}
+                          <div>
+                            <p className="text-sm font-medium text-white">
+                              {formData.isPublic ? 'Public Podcast' : 'Private Podcast'}
+                            </p>
+                            <p className="text-xs text-slate-400">
+                              {formData.isPublic
+                                ? 'Anyone can discover and listen to your podcast'
+                                : 'Only you can see and access this podcast'}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setFormData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
-                        className={`
-                          relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
-                          transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50
-                          ${formData.isPublic ? 'bg-fuchsia-500' : 'bg-slate-700'}
-                        `}
-                      >
-                        <span
+                        <button
+                          type="button"
+                          onClick={() => setFormData(prev => ({ ...prev, isPublic: !prev.isPublic }))}
                           className={`
-                            pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
-                            transition duration-200 ease-in-out
-                            ${formData.isPublic ? 'translate-x-5' : 'translate-x-0'}
+                            relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent
+                            transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-fuchsia-500/50
+                            ${formData.isPublic ? 'bg-fuchsia-500' : 'bg-slate-700'}
                           `}
-                        />
-                      </button>
+                        >
+                          <span
+                            className={`
+                              pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0
+                              transition duration-200 ease-in-out
+                              ${formData.isPublic ? 'translate-x-5' : 'translate-x-0'}
+                            `}
+                          />
+                        </button>
+                      </div>
+                      {formData.isPublic && (
+                        <div className="flex items-start gap-3 p-4 bg-amber-500/10 border border-amber-500/20 rounded-xl">
+                          <div className="flex-shrink-0 mt-1">
+                            <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495zM10 5a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 5zm0 9a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div>
+                            <p className="text-sm text-amber-400">
+                              <strong>Legal Notice:</strong> You can only make your podcast public if you are an author of the uploaded research paper. Making public podcasts from papers you did not author may violate intellectual property rights.
+                            </p>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
 

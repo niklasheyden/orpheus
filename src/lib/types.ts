@@ -26,21 +26,22 @@ export interface Podcast {
   bookmarks_count: number;
 }
 
-export interface Profile {
+export type Profile = {
   id: string;
   name: string | null;
   avatar_url: string | null;
-  affiliation: string | null;
   bio: string | null;
-  research_interests: string | null;
-  banner_background: string;
-  custom_banner_url: string | null;
+  status: string | null;
+  affiliation: string | null;
   website: string | null;
   github: string | null;
+  twitter: string | null;
   linkedin: string | null;
   instagram: string | null;
   research_gate: string | null;
-  status: string | null;
+  research_interests: string | null;
+  banner_background: string | null;
+  custom_banner_url: string | null;
   created_at: string;
   updated_at: string;
-}
+};
