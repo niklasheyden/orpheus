@@ -360,10 +360,6 @@ const UserProfile = () => {
                   </span>
                 )}
               </div>
-              {/* Gradient Fade - Only show when there are enough interests */}
-              {(profile?.research_interests?.split(',').length || 0) > 2 && (
-                <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-[#0B0F15] to-transparent pointer-events-none"></div>
-              )}
             </div>
           </div>
 
