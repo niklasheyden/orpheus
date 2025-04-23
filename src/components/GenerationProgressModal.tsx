@@ -13,7 +13,7 @@ const GenerationProgressModal: React.FC<GenerationProgressModalProps> = ({ isOpe
   const stages = [
     {
       title: 'Identifying Key Insights',
-      description: 'Analyzing your research to create a comprehensive AI summary',
+      description: 'Analyzing research paper to create a comprehensive summary',
       icon: Sparkles,
       stage: 'summary'
     },
@@ -34,16 +34,13 @@ const GenerationProgressModal: React.FC<GenerationProgressModalProps> = ({ isOpe
       description: 'Converting the script into high-quality audio narration',
       icon: Mic,
       stage: 'audio'
-    },
-    {
-      title: 'Finalizing',
-      description: 'Saving your podcast and preparing for playback',
-      icon: CheckCircle2,
-      stage: 'complete'
     }
   ];
 
-  const currentStageIndex = stages.findIndex(stage => stage.stage === currentStage);
+  // Find the current stage index, but handle the 'complete' stage specially
+  const currentStageIndex = currentStage === 'complete' 
+    ? stages.length // This will make all stages appear completed
+    : stages.findIndex(stage => stage.stage === currentStage);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -61,7 +58,7 @@ const GenerationProgressModal: React.FC<GenerationProgressModalProps> = ({ isOpe
           <div className="space-y-4">
             {stages.map((stage, index) => {
               const isActive = index === currentStageIndex;
-              const isCompleted = index < currentStageIndex;
+              const isCompleted = index < currentStageIndex || currentStage === 'complete';
               const Icon = stage.icon;
 
               return (

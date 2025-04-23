@@ -24,7 +24,6 @@ const PodcastPage = () => {
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
-  const [isAbstractExpanded, setIsAbstractExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'summary' | 'abstract'>('summary');
   const audioRef = useRef<HTMLAudioElement>(null);
   const { showToast } = useToast();
@@ -795,14 +794,6 @@ const PodcastPage = () => {
                       )}
                     </div>
                   )}
-                  {activeTab === 'summary' && podcast.summary && (
-                    <button
-                      onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
-                      className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"
-                    >
-                      {isAbstractExpanded ? 'Show less' : 'Read more'}
-                    </button>
-                  )}
                 </div>
               </div>
             </div>
@@ -1028,14 +1019,6 @@ const PodcastPage = () => {
                       <p className="text-slate-400 italic">No abstract available for this podcast.</p>
                     )}
                   </div>
-                )}
-                {activeTab === 'summary' && podcast.summary && (
-                  <button
-                    onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
-                    className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"
-                  >
-                    {isAbstractExpanded ? 'Show less' : 'Read more'}
-                  </button>
                 )}
               </div>
             </div>
