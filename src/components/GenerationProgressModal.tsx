@@ -1,43 +1,49 @@
 import React from 'react';
-import { Loader2, Image, FileText, Mic, CheckCircle2 } from 'lucide-react';
+import { Loader2, Image, FileText, Mic, CheckCircle2, Sparkles } from 'lucide-react';
 
 interface GenerationProgressModalProps {
   isOpen: boolean;
   progress: number;
-  currentStage: 'image' | 'script' | 'audio' | 'complete';
+  currentStage: 'image' | 'script' | 'summary' | 'audio' | 'complete';
 }
 
-const GenerationProgressModal = ({ isOpen, progress, currentStage }: GenerationProgressModalProps) => {
+const GenerationProgressModal: React.FC<GenerationProgressModalProps> = ({ isOpen, progress, currentStage }) => {
   if (!isOpen) return null;
 
   const stages = [
     {
-      id: 'image',
-      icon: Image,
+      title: 'Identifying Key Insights',
+      description: 'Analyzing your research to create a comprehensive AI summary',
+      icon: Sparkles,
+      stage: 'summary'
+    },
+    {
       title: 'Generating Cover Image',
-      description: 'Creating a unique cover image for your podcast using AI'
+      description: 'Creating a unique cover image for your podcast using AI',
+      icon: Image,
+      stage: 'image'
     },
     {
-      id: 'script',
-      icon: FileText,
       title: 'Writing Podcast Script',
-      description: 'Converting your research into an engaging podcast script'
+      description: 'Converting your research into an engaging podcast script',
+      icon: FileText,
+      stage: 'script'
     },
     {
-      id: 'audio',
-      icon: Mic,
       title: 'Creating Audio',
-      description: 'Generating high-quality audio narration'
+      description: 'Converting the script into high-quality audio narration',
+      icon: Mic,
+      stage: 'audio'
     },
     {
-      id: 'complete',
-      icon: CheckCircle2,
       title: 'Finalizing',
-      description: 'Saving your podcast and preparing for playback'
+      description: 'Saving your podcast and preparing for playback',
+      icon: CheckCircle2,
+      stage: 'complete'
     }
   ];
 
-  const currentStageIndex = stages.findIndex(stage => stage.id === currentStage);
+  const currentStageIndex = stages.findIndex(stage => stage.stage === currentStage);
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50">
@@ -60,7 +66,7 @@ const GenerationProgressModal = ({ isOpen, progress, currentStage }: GenerationP
 
               return (
                 <div
-                  key={stage.id}
+                  key={stage.stage}
                   className={`flex items-start gap-4 p-4 rounded-xl transition-colors ${
                     isActive
                       ? 'bg-fuchsia-500/10 border border-fuchsia-500/20'

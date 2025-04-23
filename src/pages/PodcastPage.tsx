@@ -25,6 +25,7 @@ const PodcastPage = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showEditForm, setShowEditForm] = useState(false);
   const [isAbstractExpanded, setIsAbstractExpanded] = useState(false);
+  const [activeTab, setActiveTab] = useState<'summary' | 'abstract'>('summary');
   const audioRef = useRef<HTMLAudioElement>(null);
   const { showToast } = useToast();
   const [isInPlaylist, setIsInPlaylist] = useState(false);
@@ -312,7 +313,7 @@ const PodcastPage = () => {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    showToast('Podcast link copied to clipboard!');
+    showToast('✨ Podcast link copied to clipboard! Share it with your colleagues.');
   };
 
   const handleDownload = async () => {
@@ -385,7 +386,7 @@ const PodcastPage = () => {
       queryClient.invalidateQueries({ queryKey: ['podcast-stats'] });
       queryClient.invalidateQueries({ queryKey: ['podcast', podcast.id] });
 
-      navigate('/');
+      navigate(`/user/${user.id}`);
       showToast('Podcast deleted successfully');
     } catch (error) {
       console.error('Error in delete process:', error);
@@ -663,12 +664,115 @@ const PodcastPage = () => {
             {/* Abstract - Hidden on mobile, shown on desktop */}
             <div className="hidden lg:block mt-4">
               <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-                <h2 className="text-lg font-semibold text-white mb-4">Abstract</h2>
+                <div className="border-b border-slate-700/50">
+                  <div className="flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab('summary')}
+                      className={`px-4 py-2 text-sm font-medium transition-colors ${
+                        activeTab === 'summary'
+                          ? 'text-fuchsia-400 border-b-2 border-fuchsia-400'
+                          : 'text-slate-400 hover:text-slate-300'
+                      }`}
+                    >
+                      AI Summary
+                    </button>
+                    <button
+                      onClick={() => setActiveTab('abstract')}
+                      className={`px-4 py-2 text-sm font-medium transition-colors ${
+                        activeTab === 'abstract'
+                          ? 'text-fuchsia-400 border-b-2 border-fuchsia-400'
+                          : 'text-slate-400 hover:text-slate-300'
+                      }`}
+                    >
+                      Abstract
+                    </button>
+                  </div>
+                </div>
                 <div className="relative">
-                  <p className="text-slate-300 whitespace-pre-wrap">
-                    {isAbstractExpanded ? podcast.abstract : `${podcast.abstract.slice(0, 600)}...`}
-                  </p>
-                  {podcast.abstract.length > 600 && (
+                  {activeTab === 'summary' ? (
+                    <div className="text-slate-300">
+                      {podcast.summary ? (
+                        <div className="space-y-4">
+                          <style>{`
+                            .summary-content h2 {
+                              font-size: 1.25rem;
+                              font-weight: 600;
+                              color: white;
+                              margin-bottom: 0.5rem;
+                              margin-top: 1.5rem;
+                            }
+                            .summary-content h2:first-child {
+                              margin-top: 0;
+                            }
+                            .summary-content p {
+                              color: rgb(203 213 225);
+                              margin-bottom: 0.5rem;
+                            }
+                            .summary-content ul {
+                              list-style-type: disc;
+                              padding-left: 1.5rem;
+                              margin-bottom: 0.5rem;
+                            }
+                            .summary-content li {
+                              color: rgb(203 213 225);
+                              margin-bottom: 0.25rem;
+                            }
+                            .summary-content strong {
+                              color: white;
+                            }
+                          `}</style>
+                          <div 
+                            className="summary-content"
+                            dangerouslySetInnerHTML={{ __html: podcast.summary }}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 italic">No summary available for this podcast.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-slate-300">
+                      {podcast.abstract ? (
+                        <div className="space-y-4">
+                          <style>{`
+                            .summary-content h2 {
+                              font-size: 1.25rem;
+                              font-weight: 600;
+                              color: white;
+                              margin-bottom: 0.5rem;
+                              margin-top: 1.5rem;
+                            }
+                            .summary-content h2:first-child {
+                              margin-top: 0;
+                            }
+                            .summary-content p {
+                              color: rgb(203 213 225);
+                              margin-bottom: 0.5rem;
+                            }
+                            .summary-content ul {
+                              list-style-type: disc;
+                              padding-left: 1.5rem;
+                              margin-bottom: 0.5rem;
+                            }
+                            .summary-content li {
+                              color: rgb(203 213 225);
+                              margin-bottom: 0.25rem;
+                            }
+                            .summary-content strong {
+                              color: white;
+                            }
+                          `}</style>
+                          <div 
+                            className="summary-content"
+                            dangerouslySetInnerHTML={{ __html: podcast.abstract }}
+                          />
+                        </div>
+                      ) : (
+                        <p className="text-slate-400 italic">No abstract available for this podcast.</p>
+                      )}
+                    </div>
+                  )}
+                  {activeTab === 'summary' && podcast.summary && (
                     <button
                       onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
                       className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"
@@ -794,12 +898,115 @@ const PodcastPage = () => {
           {/* Abstract - Shown on mobile, hidden on desktop */}
           <div className="lg:hidden col-span-1">
             <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700/50">
-              <h2 className="text-lg font-semibold text-white mb-4">Abstract</h2>
+              <div className="border-b border-slate-700/50">
+                <div className="flex space-x-8">
+                  <button
+                    onClick={() => setActiveTab('summary')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'summary'
+                        ? 'text-fuchsia-400 border-b-2 border-fuchsia-400'
+                        : 'text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    AI Summary
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('abstract')}
+                    className={`px-4 py-2 text-sm font-medium transition-colors ${
+                      activeTab === 'abstract'
+                        ? 'text-fuchsia-400 border-b-2 border-fuchsia-400'
+                        : 'text-slate-400 hover:text-slate-300'
+                    }`}
+                  >
+                    Abstract
+                  </button>
+                </div>
+              </div>
               <div className="relative">
-                <p className="text-slate-300 whitespace-pre-wrap">
-                  {isAbstractExpanded ? podcast.abstract : `${podcast.abstract.slice(0, 600)}...`}
-                </p>
-                {podcast.abstract.length > 600 && (
+                {activeTab === 'summary' ? (
+                  <div className="text-slate-300">
+                    {podcast.summary ? (
+                      <div className="space-y-4">
+                        <style>{`
+                          .summary-content h2 {
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            color: white;
+                            margin-bottom: 0.5rem;
+                            margin-top: 1.5rem;
+                          }
+                          .summary-content h2:first-child {
+                            margin-top: 0;
+                          }
+                          .summary-content p {
+                            color: rgb(203 213 225);
+                            margin-bottom: 0.5rem;
+                          }
+                          .summary-content ul {
+                            list-style-type: disc;
+                            padding-left: 1.5rem;
+                            margin-bottom: 0.5rem;
+                          }
+                          .summary-content li {
+                            color: rgb(203 213 225);
+                            margin-bottom: 0.25rem;
+                          }
+                          .summary-content strong {
+                            color: white;
+                          }
+                        `}</style>
+                        <div 
+                          className="summary-content"
+                          dangerouslySetInnerHTML={{ __html: podcast.summary }}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic">No summary available for this podcast.</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-slate-300">
+                    {podcast.abstract ? (
+                      <div className="space-y-4">
+                        <style>{`
+                          .summary-content h2 {
+                            font-size: 1.25rem;
+                            font-weight: 600;
+                            color: white;
+                            margin-bottom: 0.5rem;
+                            margin-top: 1.5rem;
+                          }
+                          .summary-content h2:first-child {
+                            margin-top: 0;
+                          }
+                          .summary-content p {
+                            color: rgb(203 213 225);
+                            margin-bottom: 0.5rem;
+                          }
+                          .summary-content ul {
+                            list-style-type: disc;
+                            padding-left: 1.5rem;
+                            margin-bottom: 0.5rem;
+                          }
+                          .summary-content li {
+                            color: rgb(203 213 225);
+                            margin-bottom: 0.25rem;
+                          }
+                          .summary-content strong {
+                            color: white;
+                          }
+                        `}</style>
+                        <div 
+                          className="summary-content"
+                          dangerouslySetInnerHTML={{ __html: podcast.abstract }}
+                        />
+                      </div>
+                    ) : (
+                      <p className="text-slate-400 italic">No abstract available for this podcast.</p>
+                    )}
+                  </div>
+                )}
+                {activeTab === 'summary' && podcast.summary && (
                   <button
                     onClick={() => setIsAbstractExpanded(!isAbstractExpanded)}
                     className="mt-2 text-fuchsia-400 hover:text-fuchsia-300 transition-colors text-sm font-medium"

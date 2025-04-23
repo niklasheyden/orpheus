@@ -104,7 +104,7 @@ const Waitlist = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20">
         <div className="text-center max-w-3xl mx-auto mb-16">
           <h1 className="text-4xl sm:text-6xl font-display font-medium mb-6">
-            Transform Your Research into{' '}
+            Turn Your Research into{' '}
             <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
               Engaging Podcasts
             </span>

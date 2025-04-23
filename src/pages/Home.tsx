@@ -104,21 +104,21 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
             <div className="text-center lg:text-left">
               <h1 className="font-display text-4xl font-medium text-white sm:text-6xl">
-                Turn Research Papers into{' '}
+                Turn Any Research Paper into an{' '}
                 <span className="relative whitespace-nowrap">
                   <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent">
-                    Engaging Podcasts
+                    Engaging Podcast
                   </span>
                 </span>
               </h1>
               <p className="mt-6 text-lg text-slate-400">
-                Orpheus uses AI to turn academic papers into high-quality audio content, making research more accessible and digestible.
+                Orpheus AI transforms research papers into concise summaries and digestible audio podcasts, making cutting-edge science accessible to everyone.
               </p>
               <Link
                 to="/waitlist"
-                className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20"
+                className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20 w-full sm:w-auto"
               >
-                <span className="mr-3">Generate a Podcast</span>
+                <span className="mr-3">Get Started for Free</span>
                 <Sparkles className="h-6 w-6" />
               </Link>
             </div>
@@ -138,16 +138,16 @@ const Home = () => {
                   <>
                     <PodcastCard podcast={randomPodcast} />
                     {/* Play button indicator */}
-                    <div className="absolute -bottom-6 right-8 transform flex items-start gap-3">
-                      <span className="text-sm text-fuchsia-400/70 mt-5">
+                    <div className="absolute -bottom-6 right-4 sm:right-8 transform flex items-start gap-3">
+                      <span className="text-xs sm:text-sm text-fuchsia-400/70 mt-5">
                         Listen to a sample
                       </span>
                       {/* Curved arrow */}
                       <svg 
-                        width="80" 
-                        height="32" 
+                        width="60" 
+                        height="24" 
                         viewBox="0 0 80 32" 
-                        className="text-fuchsia-400/70"
+                        className="text-fuchsia-400/70 sm:w-[80px] sm:h-[32px]"
                       >
                         <path 
                           d="M0,32 C20,32 40,24 60,0" 
@@ -195,7 +195,7 @@ const Home = () => {
               </div>
               <div className="pt-6">
                 <h3 className="text-xl font-medium text-white mb-3">Generate Podcast</h3>
-                <p className="text-slate-400 leading-relaxed">Upload your research paper, and our AI transforms it into an engaging podcast in just a minute.</p>
+                <p className="text-slate-400 leading-relaxed">Simply upload your paper — Orpheus crafts a summary and podcast in just 2 minutes.</p>
               </div>
             </div>
 
@@ -481,7 +481,7 @@ const Home = () => {
         <div className="mx-auto max-w-2xl lg:max-w-none">
           <div className="text-center mb-12">
             <h2 className="font-display text-3xl font-medium text-white sm:text-4xl">
-              Showcase Your Curiosity
+              Showcase Your Work
             </h2>
             <p className="mt-4 text-lg text-slate-400">
               Get your own professional profile page and connect with other researchers
@@ -513,7 +513,7 @@ const Home = () => {
               </div>
             </div>
             <div className="relative w-full">
-              <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-[rgb(2,4,15)] via-[rgb(15,23,42)]/95 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 h-24 sm:h-36 bg-gradient-to-t from-[rgb(2,4,15)] via-[rgb(15,23,42)]/80 to-transparent" />
               <img 
                 src="images/orpheus_profile-mockup.png" 
                 alt="Profile Mockup" 
@@ -645,35 +645,13 @@ const Home = () => {
                     <Sparkles className="h-5 w-5" />
                   </Link>
                 ) : (
-                  <>
-              <Link
-                      to="/waitlist"
-                      className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-lg px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
-              >
-                Get Started
-                <ArrowRight className="w-5 h-5" />
-              </Link>
-                    <button
-                      onClick={() => navigate('/discover')}
-                      className="inline-flex items-center justify-center rounded-full bg-slate-800/50 border border-slate-700/50 px-6 py-3 text-sm font-semibold text-slate-300 transition-colors hover:bg-slate-700/50 hover:text-white"
-                    >
-                      <span className="mr-3">Discover More Podcasts</span>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        strokeWidth={1.5}
-                        stroke="currentColor"
-                        className="w-4 h-4"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          d="M17.25 8.25L21 12m0 0L17.25 15.75M21 12H3"
-                        />
-                      </svg>
-              </button>
-                  </>
+                  <Link
+                    to="/waitlist"
+                    className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
+                  >
+                    Get Started
+                    <ArrowRight className="w-5 h-5" />
+                  </Link>
                 )}
               </div>
             </div>

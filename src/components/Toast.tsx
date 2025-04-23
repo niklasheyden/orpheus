@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { X } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { X, CheckCircle } from 'lucide-react';
 import { create } from 'zustand';
 
 interface ToastState {
@@ -21,10 +21,15 @@ export const useToast = create<ToastState>((set) => ({
 
 const Toast = () => {
   const { message, hideToast } = useToast();
+  const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
     if (message) {
-      const timer = setTimeout(hideToast, 3000);
+      setIsVisible(true);
+      const timer = setTimeout(() => {
+        setIsVisible(false);
+        setTimeout(hideToast, 300); // Wait for fade out animation
+      }, 3000);
       return () => clearTimeout(timer);
     }
   }, [message, hideToast]);
@@ -32,12 +37,16 @@ const Toast = () => {
   if (!message) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-50">
-      <div className="bg-kit-green text-white px-6 py-3 rounded-lg shadow-lg flex items-center gap-3">
+    <div
+      className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition-all duration-300 ${
+        isVisible
+          ? 'opacity-100 translate-y-0'
+          : 'opacity-0 translate-y-2'
+      } bg-slate-800 border border-slate-700/50 text-white backdrop-blur-sm`}
+    >
+      <div className="flex items-center gap-2">
+        <CheckCircle className="w-5 h-5 text-emerald-400" />
         <span>{message}</span>
-        <button onClick={hideToast} className="text-white hover:text-gray-200">
-          <X className="h-4 w-4" />
-        </button>
       </div>
     </div>
   );

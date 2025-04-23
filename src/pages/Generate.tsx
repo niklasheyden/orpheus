@@ -32,7 +32,7 @@ const Generate = () => {
   const [isDragging, setIsDragging] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [currentStage, setCurrentStage] = useState<'image' | 'script' | 'audio' | 'complete'>('image');
+  const [currentStage, setCurrentStage] = useState<'image' | 'script' | 'summary' | 'audio' | 'complete'>('image');
   const [formData, setFormData] = useState({
     title: '',
     abstract: '',
@@ -329,8 +329,67 @@ Format: Single paragraph, detailed description`
     setCurrentStage('image');
 
     try {
+      // Generate summary first
+      setCurrentStage('summary');
+      setProgress(20);
+      const summaryCompletion = await openai.chat.completions.create({
+        model: "gpt-4-turbo-preview",
+        messages: [
+          {
+            role: "system",
+            content: "You are an expert research analyst who specializes in extracting and summarizing key insights from academic papers. Your summaries are clear, concise, and structured to highlight the most important aspects of the research. Format the output using simple HTML tags for better readability, with a focus on professional presentation and minimal spacing."
+          },
+          {
+            role: "user",
+            content: `Create a structured summary of key insights from the following research paper:
+              Title: ${formData.title}
+              Abstract: ${formData.abstract}
+              Authors: ${formData.authors}
+              Keywords: ${formData.keywords}
+              
+              Full Paper Text:
+              ${pdfText}
+              
+              Guidelines for the summary:
+              1. Structure the summary with clear sections using simple HTML:
+                 - Use <h2> for section headings
+                 - Use <p> for paragraphs
+                 - Use <ul> for bullet lists
+                 - Use <li> for list items
+                 - Use <strong> for emphasis
+              2. Include these sections:
+                 - Key Findings (summarizes the main results and their significance)
+                 - Background and Motivation (introduces the topic, research problem, and the motivation (including research questions/hypotheses))
+                 - Methodology (describes the research design, data collection, and analysis methods)
+                 - Results (presents the data and results)
+                 - Discussion (interprets the results and discusses their implications)
+                 - Conclusion (summarizes the key findings, their significance, and future research directions)
+              3. Use clear, accessible, neutral language
+              4. Keep the summary concise but comprehensive
+              5. Format using simple HTML tags
+              6. Ensure minimal text between sections
+              7. Use bullet points for better readability where appropriate
+              
+              Remember:
+              - Be objective and evidence-based
+              - Avoid sensational language or hyperbolic claims
+              - Present findings in a balanced manner
+              - Use precise, measured language
+              - Ensure all HTML tags are properly closed
+              - Keep formatting minimal and clean
+              - Never include code block markers or markdown`
+          }
+        ]
+      });
+
+      const summary = summaryCompletion.choices[0].message.content;
+      if (!summary) {
+        throw new Error('Failed to generate summary');
+      }
+
       // Generate cover image
-      setProgress(10);
+      setCurrentStage('image');
+      setProgress(40);
       const imagePrompt = await generateCoverImagePrompt(
         formData.title,
         formData.abstract,
@@ -351,12 +410,11 @@ Format: Single paragraph, detailed description`
         throw new Error('Failed to generate cover image');
       }
 
-      setProgress(30);
       const coverImageUrl = await saveImageToSupabase(tempImageUrl, user!.id);
 
       // Generate script
       setCurrentStage('script');
-      setProgress(40);
+      setProgress(60);
       const completion = await openai.chat.completions.create({
         model: "gpt-4-turbo-preview",
         messages: [
@@ -415,7 +473,7 @@ Format: Single paragraph, detailed description`
 
       // Generate audio
       setCurrentStage('audio');
-      setProgress(70);
+      setProgress(80);
       const speechResponse = await openai.audio.speech.create({
         model: "gpt-4o-mini-tts",
         voice: "echo",
@@ -449,13 +507,14 @@ Format: Single paragraph, detailed description`
 
       // Save podcast
       setCurrentStage('complete');
-      setProgress(90);
+      setProgress(100);
       const { data: podcastData, error: podcastError } = await supabase
         .from('podcasts')
         .insert([
           {
             title: formData.title,
             abstract: formData.abstract,
+            summary: summary,
             authors: formData.authors,
             publishing_year: parseInt(formData.publishingYear),
             field_of_research: formData.fieldOfResearch,
@@ -475,7 +534,6 @@ Format: Single paragraph, detailed description`
         throw new Error(`Failed to save podcast: ${podcastError.message}`);
       }
 
-      setProgress(100);
       showToast('Podcast generated successfully!');
       navigate(`/podcast/${podcastData.id}`);
     } catch (error: any) {

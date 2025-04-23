@@ -3,6 +3,7 @@ export interface Podcast {
   title: string;
   description: string;
   abstract: string;
+  summary: string | null;
   authors: string;
   publishing_year: number;
   field_of_research: string;
