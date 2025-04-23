@@ -75,11 +75,12 @@ function App() {
                 <main className="relative">
                   <Routes>
                     {/* Public Routes */}
-                    <Route path="/waitlist" element={<Waitlist />} />
-                    <Route path="/survey" element={<Survey />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/auth/verify" element={<Verify />} />
                     <Route path="/" element={<Home />} />
+                    <Route path="/auth" element={<Auth />} />
+                    <Route path="/waitlist" element={<Waitlist />} />
+                    <Route path="/podcast/:id" element={<PodcastPage />} />
+                    <Route path="/survey" element={<Survey />} />
+                    <Route path="/auth/verify" element={<Verify />} />
                     <Route path="/privacy" element={<PrivacyPolicy />} />
                     <Route path="/terms" element={<TermsOfService />} />
                     <Route path="/imprint" element={<Imprint />} />
@@ -90,7 +91,6 @@ function App() {
                         <Route path="/discover" element={<Discover />} />
                         <Route path="/generate" element={<Generate />} />
                         <Route path="/profile" element={<Profile />} />
-                        <Route path="/podcast/:id" element={<PodcastPage />} />
                         <Route path="/playlist" element={<PlaylistPage />} />
                         <Route path="/user/:userId" element={<UserProfile />} />
                         <Route path="/trending" element={<TrendingPage />} />
@@ -104,7 +104,6 @@ function App() {
                         <Route path="/discover" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/generate" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/profile" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/podcast/:id" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/playlist" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/user/:userId" element={<Navigate to="/waitlist" replace />} />
                         <Route path="/trending" element={<Navigate to="/waitlist" replace />} />

@@ -274,22 +274,30 @@ const PodcastPage = () => {
     if (!podcast) return;
 
     console.log('Play clicked:', { isCurrentlyPlaying, currentPodcast: currentPodcast?.id, podcastId: podcast.id });
+    
+    // If user is not authenticated, play the podcast but don't track stats
+    if (!user) {
+      if (currentPodcast?.id === podcast.id) {
+        togglePlayPause();
+      } else {
+        playPodcast(podcast);
+      }
+      return;
+    }
+
     const now = Date.now() / 1000;
     
-    // Only check cooldown and record plays for authenticated users
-    if (user) {
-      if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN && !isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
-        console.log('Play cooldown active, waiting...');
-        showToast(`Please wait before playing again`);
-        return;
-      }
+    if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN && !isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
+      console.log('Play cooldown active, waiting...');
+      showToast(`Please wait before playing again`);
+      return;
+    }
 
-      // Only set these when starting a completely new play session
-      if (!isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
-        setLastPlayTime(now);
-        setPlayStartTime(now);
-        console.log('Starting new playback, time set:', now);
-      }
+    // Only set these when starting a completely new play session
+    if (!isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
+      setLastPlayTime(now);
+      setPlayStartTime(now);
+      console.log('Starting new playback, time set:', now);
     }
 
     // If this podcast is currently loaded in the player
@@ -317,6 +325,11 @@ const PodcastPage = () => {
   };
 
   const handleDownload = async () => {
+    if (!user) {
+      navigate('/auth');
+      showToast('Sign in to download podcasts');
+      return;
+    }
     if (!podcast?.audio_url) return;
 
     try {
@@ -399,7 +412,12 @@ const PodcastPage = () => {
   };
 
   const handlePlaylistToggle = async () => {
-    if (!user || !podcast) {
+    if (!user) {
+      navigate('/auth');
+      showToast('Sign in to add podcasts to your playlist');
+      return;
+    }
+    if (!podcast) {
       showToast('Please sign in to add to playlist');
       return;
     }
@@ -438,7 +456,12 @@ const PodcastPage = () => {
   };
 
   const handleLikeToggle = async () => {
-    if (!user || !podcast) {
+    if (!user) {
+      navigate('/auth');
+      showToast('Sign in to like podcasts');
+      return;
+    }
+    if (!podcast) {
       showToast('Please sign in to like podcasts');
       return;
     }
