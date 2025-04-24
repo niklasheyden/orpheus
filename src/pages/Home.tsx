@@ -100,9 +100,9 @@ const Home = () => {
       {/* Hero Section */}
       <div className="relative overflow-hidden mb-32">
         <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
-        <div className="relative flex items-center justify-center min-h-[calc(100vh-5rem)] mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="relative flex items-center justify-center min-h-[calc(100vh-4rem)] pb-16 sm:pb-0 mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-8 items-center">
-            <div className="text-center lg:text-left">
+            <div className="relative text-center lg:text-left z-10">
               <h1 className="font-display text-4xl font-medium text-white sm:text-6xl">
                 Turn Any Research Paper into an{' '}
                 <span className="relative whitespace-nowrap">
@@ -114,13 +114,15 @@ const Home = () => {
               <p className="mt-6 text-lg text-slate-400">
                 Orpheus AI transforms research papers into concise summaries and digestible audio podcasts, making cutting-edge science accessible to everyone.
               </p>
-              <Link
-                to="/waitlist"
-                className="mt-12 inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20 w-full sm:w-auto"
-              >
-                <span className="mr-3">Get Started for Free</span>
-                <Sparkles className="h-6 w-6" />
-              </Link>
+              <div className="relative z-10 mt-12">
+                <Link
+                  to="/waitlist"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 px-8 py-4 text-base font-semibold text-white transition-all hover:shadow-lg hover:shadow-sky-400/20 w-full sm:w-auto"
+                >
+                  <span className="mr-3">Get Started for Free</span>
+                  <Sparkles className="h-6 w-6" />
+                </Link>
+              </div>
             </div>
 
             <div className="relative flex items-center justify-center">
@@ -138,8 +140,8 @@ const Home = () => {
                   <>
                     <PodcastCard podcast={randomPodcast} />
                     {/* Play button indicator */}
-                    <div className="absolute -bottom-6 right-4 sm:right-8 transform flex items-start gap-3">
-                      <span className="text-xs sm:text-sm text-fuchsia-400/70 mt-5">
+                    <div className="absolute -bottom-5 sm:-bottom-6 right-6 sm:right-8 transform flex items-start gap-3">
+                      <span className="text-xs sm:text-sm text-fuchsia-400/70 mt-4 sm:mt-5">
                         Listen to a sample
                       </span>
                       {/* Curved arrow */}

@@ -143,7 +143,7 @@ const Waitlist = () => {
                   disabled={isSubmitting}
                   className="w-full bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-lg px-4 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all disabled:opacity-50"
                 >
-                  {isSubmitting ? 'Joining...' : 'Join the Waitlist'}
+                  {isSubmitting ? 'Joining...' : 'Get Access'}
                 </button>
               </form>
 
