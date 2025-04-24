@@ -27,5 +27,5 @@
   
   <!-- Text -->
   <text x="600" y="500" font-family="Arial, sans-serif" font-size="72" font-weight="bold" text-anchor="middle" fill="white">Orpheus</text>
-  <text x="600" y="560" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#94A3B8">AI-Powered Research Podcasts</text>
+  <text x="600" y="560" font-family="Arial, sans-serif" font-size="36" text-anchor="middle" fill="#94A3B8">Turn Any Research Paper into an Engaging Podcast</text>
 </svg> 
