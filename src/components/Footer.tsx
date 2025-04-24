@@ -113,10 +113,10 @@ const Footer = () => {
             <ul className="mt-4 space-y-2">
               <li>
                 <a
-                  href="mailto:contact@orpheus.dev"
+                  href="mailto:contact@orpheusai.io"
                   className="text-sm text-slate-400 hover:text-slate-100"
                 >
-                  contact@orpheus.dev
+                  contact@orpheusai.io
                 </a>
               </li>
             </ul>
@@ -126,7 +126,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="mt-12 border-t border-slate-800/50 pt-8">
           <p className="text-center text-xs text-slate-400">
-            © {new Date().getFullYear()} Orpheus. All rights reserved.
+            © {new Date().getFullYear()} Orpheus AI. All rights reserved.
           </p>
         </div>
       </div>
