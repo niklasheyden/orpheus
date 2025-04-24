@@ -10,7 +10,7 @@ import Profile from './pages/Profile';
 import PodcastPage from './pages/PodcastPage';
 import Auth from './pages/Auth';
 import Discover from './pages/Discover';
-import Toast from './components/Toast';
+import { ToastProvider } from './components/Toast';
 import PlaylistPage from './pages/PlaylistPage';
 import UserProfile from './pages/UserProfile';
 import TrendingPage from './pages/TrendingPage';
@@ -66,59 +66,60 @@ function App() {
         <ScrollToTop />
         <AuthInit>
           <AudioPlayerProvider>
-            <div className="min-h-screen bg-slate-950 selection:bg-sky-500/90 selection:text-white">
-              <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-slate-950" />
-              <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
-              
-              <div className="relative">
-                <Navbar session={session} />
-                <main className="relative">
-                  <Routes>
-                    {/* Public Routes */}
-                    <Route path="/" element={<Home />} />
-                    <Route path="/auth" element={<Auth />} />
-                    <Route path="/waitlist" element={<Waitlist />} />
-                    <Route path="/podcast/:id" element={<PodcastPage />} />
-                    <Route path="/survey" element={<Survey />} />
-                    <Route path="/auth/verify" element={<Verify />} />
-                    <Route path="/privacy" element={<PrivacyPolicy />} />
-                    <Route path="/terms" element={<TermsOfService />} />
-                    <Route path="/imprint" element={<Imprint />} />
+            <ToastProvider>
+              <div className="min-h-screen bg-slate-950 selection:bg-sky-500/90 selection:text-white">
+                <div className="pointer-events-none absolute inset-x-0 top-0 z-20 h-28 bg-gradient-to-b from-slate-950" />
+                <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
+                
+                <div className="relative">
+                  <Navbar session={session} />
+                  <main className="relative">
+                    <Routes>
+                      {/* Public Routes */}
+                      <Route path="/" element={<Home />} />
+                      <Route path="/auth" element={<Auth />} />
+                      <Route path="/waitlist" element={<Waitlist />} />
+                      <Route path="/podcast/:id" element={<PodcastPage />} />
+                      <Route path="/survey" element={<Survey />} />
+                      <Route path="/auth/verify" element={<Verify />} />
+                      <Route path="/privacy" element={<PrivacyPolicy />} />
+                      <Route path="/terms" element={<TermsOfService />} />
+                      <Route path="/imprint" element={<Imprint />} />
 
-                    {/* Protected Routes */}
-                    {session ? (
-                      <>
-                        <Route path="/discover" element={<Discover />} />
-                        <Route path="/generate" element={<Generate />} />
-                        <Route path="/profile" element={<Profile />} />
-                        <Route path="/playlist" element={<PlaylistPage />} />
-                        <Route path="/user/:userId" element={<UserProfile />} />
-                        <Route path="/trending" element={<TrendingPage />} />
-                        <Route path="/most-liked" element={<MostLikedPage />} />
-                        <Route path="/recent" element={<RecentPage />} />
-                        <Route path="/onboarding" element={<Onboarding />} />
-                      </>
-                    ) : (
-                      // Redirect all protected routes to waitlist
-                      <>
-                        <Route path="/discover" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/generate" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/profile" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/playlist" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/user/:userId" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/trending" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/most-liked" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/recent" element={<Navigate to="/waitlist" replace />} />
-                        <Route path="/onboarding" element={<Navigate to="/waitlist" replace />} />
-                      </>
-                    )}
-                  </Routes>
-                </main>
-                <Footer />
-                <Toast />
-                <StickyPlayer />
+                      {/* Protected Routes */}
+                      {session ? (
+                        <>
+                          <Route path="/discover" element={<Discover />} />
+                          <Route path="/generate" element={<Generate />} />
+                          <Route path="/profile" element={<Profile />} />
+                          <Route path="/playlist" element={<PlaylistPage />} />
+                          <Route path="/user/:userId" element={<UserProfile />} />
+                          <Route path="/trending" element={<TrendingPage />} />
+                          <Route path="/most-liked" element={<MostLikedPage />} />
+                          <Route path="/recent" element={<RecentPage />} />
+                          <Route path="/onboarding" element={<Onboarding />} />
+                        </>
+                      ) : (
+                        // Redirect all protected routes to waitlist
+                        <>
+                          <Route path="/discover" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/generate" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/profile" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/playlist" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/user/:userId" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/trending" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/most-liked" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/recent" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/onboarding" element={<Navigate to="/waitlist" replace />} />
+                        </>
+                      )}
+                    </Routes>
+                  </main>
+                  <Footer />
+                  <StickyPlayer />
+                </div>
               </div>
-            </div>
+            </ToastProvider>
           </AudioPlayerProvider>
         </AuthInit>
       </Router>

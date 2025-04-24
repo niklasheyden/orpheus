@@ -320,45 +320,58 @@ const PodcastPage = () => {
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    showToast('✨ Podcast link copied to clipboard! Share it with your colleagues.');
+    showToast({
+      title: 'Success',
+      message: 'Link copied to clipboard',
+      type: 'success'
+    });
   };
 
   const handleDownload = async () => {
     if (!user) {
       navigate('/auth');
-      showToast('Sign in to download podcasts');
+      showToast({
+        title: 'Sign in Required',
+        message: 'Sign in to download podcasts',
+        type: 'info'
+      });
       return;
     }
-    if (!podcast?.audio_url) return;
 
     try {
-      let storagePath = podcast.audio_url;
-      if (storagePath.includes('storage/v1/object/public/podcasts/')) {
-        storagePath = storagePath.split('storage/v1/object/public/podcasts/')[1];
-      }
-
-      const { data, error } = await supabase
-        .storage
-        .from('podcasts')
-        .download(storagePath);
-
-      if (error) {
-        console.error('Error downloading audio:', error);
+      setIsDownloading(true);
+      const signedUrl = await getSignedUrl();
+      if (!signedUrl) {
+        showToast({
+          title: 'Error',
+          message: 'Failed to get download URL',
+          type: 'error'
+        });
         return;
       }
 
-      if (data) {
-        const url = URL.createObjectURL(data);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${podcast.title}.mp3`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-      }
+      // Create a temporary link element
+      const link = document.createElement('a');
+      link.href = signedUrl;
+      link.download = `${podcast.title}.mp3`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast({
+        title: 'Success',
+        message: 'Download started',
+        type: 'success'
+      });
     } catch (error) {
-      console.error('Error downloading audio:', error);
+      console.error('Error downloading podcast:', error);
+      showToast({
+        title: 'Error',
+        message: 'Failed to download podcast',
+        type: 'error'
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -399,11 +412,19 @@ const PodcastPage = () => {
       queryClient.invalidateQueries({ queryKey: ['podcast', podcast.id] });
 
       navigate(`/user/${user.id}`);
-      showToast('Podcast deleted successfully');
+      showToast({
+        title: 'Success',
+        message: 'Podcast deleted successfully',
+        type: 'success'
+      });
     } catch (error) {
       console.error('Error in delete process:', error);
       setDeleteError(error instanceof Error ? error.message : 'Failed to delete podcast');
-      showToast('Failed to delete podcast');
+      showToast({
+        title: 'Error',
+        message: 'Failed to delete podcast',
+        type: 'error'
+      });
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -413,11 +434,19 @@ const PodcastPage = () => {
   const handlePlaylistToggle = async () => {
     if (!user) {
       navigate('/auth');
-      showToast('Sign in to add podcasts to your playlist');
+      showToast({
+        title: 'Sign in Required',
+        message: 'Sign in to add podcasts to your playlist',
+        type: 'info'
+      });
       return;
     }
     if (!podcast) {
-      showToast('Please sign in to add to playlist');
+      showToast({
+        title: 'Error',
+        message: 'Please sign in to add to playlist',
+        type: 'error'
+      });
       return;
     }
 
@@ -432,7 +461,11 @@ const PodcastPage = () => {
 
         if (error) throw error;
         setIsInPlaylist(false);
-        showToast('Removed from playlist');
+        showToast({
+          title: 'Success',
+          message: 'Removed from playlist',
+          type: 'success'
+        });
       } else {
         const { error } = await supabase
           .from('playlists')
@@ -440,7 +473,11 @@ const PodcastPage = () => {
 
         if (error) throw error;
         setIsInPlaylist(true);
-        showToast('Added to playlist');
+        showToast({
+          title: 'Success',
+          message: 'Added to playlist',
+          type: 'success'
+        });
       }
       // Invalidate both playlist and stats queries
       queryClient.invalidateQueries({ queryKey: ['playlist-status'] });
@@ -448,7 +485,11 @@ const PodcastPage = () => {
       queryClient.invalidateQueries({ queryKey: ['podcast-stats', podcast.id] });
     } catch (error) {
       console.error('Error updating playlist:', error);
-      showToast('Failed to update playlist');
+      showToast({
+        title: 'Error',
+        message: 'Failed to update playlist',
+        type: 'error'
+      });
     } finally {
       setIsUpdatingPlaylist(false);
     }
@@ -457,11 +498,19 @@ const PodcastPage = () => {
   const handleLikeToggle = async () => {
     if (!user) {
       navigate('/auth');
-      showToast('Sign in to like podcasts');
+      showToast({
+        title: 'Sign in Required',
+        message: 'Sign in to like podcasts',
+        type: 'info'
+      });
       return;
     }
     if (!podcast) {
-      showToast('Please sign in to like podcasts');
+      showToast({
+        title: 'Error',
+        message: 'Please sign in to like podcasts',
+        type: 'error'
+      });
       return;
     }
 
@@ -475,21 +524,33 @@ const PodcastPage = () => {
           .eq('podcast_id', podcast.id);
 
         if (error) throw error;
-        showToast('Removed like');
+        showToast({
+          title: 'Success',
+          message: 'Removed like',
+          type: 'success'
+        });
       } else {
         const { error } = await supabase
           .from('likes')
           .insert({ user_id: user.id, podcast_id: podcast.id });
 
         if (error) throw error;
-        showToast('Added like');
+        showToast({
+          title: 'Success',
+          message: 'Added like',
+          type: 'success'
+        });
       }
       setIsLiked(!isLiked);
       // Invalidate the stats query
       queryClient.invalidateQueries({ queryKey: ['podcast-stats', podcast.id] });
     } catch (error) {
       console.error('Error updating like:', error);
-      showToast('Failed to update like');
+      showToast({
+        title: 'Error',
+        message: 'Failed to update like',
+        type: 'error'
+      });
     } finally {
       setIsUpdating(false);
     }
@@ -819,28 +880,30 @@ const PodcastPage = () => {
 
             {/* Secondary Actions */}
             <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleLikeToggle}
-                  disabled={isUpdating}
-                  className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
-                    isLiked ? 'bg-slate-700 text-fuchsia-400' : 'bg-slate-800 text-slate-300'
-                  } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
-                >
-                  <Heart size={18} className={isLiked ? 'fill-current' : ''} />
-                  {isLiked ? 'Liked' : 'Like'}
-                </button>
-                <button
-                  onClick={handlePlaylistToggle}
-                  disabled={isUpdatingPlaylist}
-                  className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
-                    isInPlaylist ? 'bg-slate-700 text-sky-400' : 'bg-slate-800 text-slate-300'
-                  } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
-                >
-                  <ListMusic size={18} />
-                  {isInPlaylist ? 'Added to Playlist' : 'Add to Playlist'}
-                </button>
-              </div>
+              {user ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={handleLikeToggle}
+                    disabled={isUpdating}
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
+                      isLiked ? 'bg-slate-700 text-fuchsia-400' : 'bg-slate-800 text-slate-300'
+                    } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
+                  >
+                    <Heart size={18} className={isLiked ? 'fill-current' : ''} />
+                    {isLiked ? 'Liked' : 'Like'}
+                  </button>
+                  <button
+                    onClick={handlePlaylistToggle}
+                    disabled={isUpdatingPlaylist}
+                    className={`flex items-center justify-center gap-2 px-4 py-2.5 ${
+                      isInPlaylist ? 'bg-slate-700 text-sky-400' : 'bg-slate-800 text-slate-300'
+                    } hover:bg-slate-700 transition-colors rounded-lg font-medium`}
+                  >
+                    <ListMusic size={18} />
+                    {isInPlaylist ? 'Added to Playlist' : 'Add to Playlist'}
+                  </button>
+                </div>
+              ) : null}
 
               <div className="grid grid-cols-2 gap-3">
                 <button

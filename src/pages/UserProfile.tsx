@@ -28,11 +28,13 @@ import {
   TrendingUp,
   Zap,
   Plus,
-  Compass
+  Compass,
+  Settings
 } from 'lucide-react';
 import type { Profile, Podcast } from '../lib/types';
 import PodcastCard from '../components/PodcastCard';
 import EditProfileModal from '../components/EditProfileModal';
+import SettingsModal from '../components/SettingsModal';
 import { Link } from 'react-router-dom';
 
 // Banner backgrounds inspired by scientific themes
@@ -105,6 +107,7 @@ const UserProfile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [sortMode, setSortMode] = useState<'recent' | 'popular'>('recent');
 
   // Fetch profile data
@@ -497,15 +500,22 @@ const UserProfile = () => {
 
             {/* Edit Profile Button (only shown to profile owner) */}
             {user && user.id === userId && (
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                className="absolute top-4 right-4 inline-flex items-center px-3 py-1.5 bg-slate-800/80 backdrop-blur-sm
-                  border border-slate-700/50 rounded-lg text-xs font-medium text-slate-300 hover:text-white
-                  hover:bg-slate-800 transition-all duration-200 group"
-              >
-                <Edit2 className="w-3.5 h-3.5 mr-1.5 text-slate-400 group-hover:text-slate-300" />
-                Edit Profile
-              </button>
+              <div className="flex items-center gap-2 absolute top-4 right-4">
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-sm text-slate-300 hover:text-white transition-colors"
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                  <span>Edit Profile</span>
+                </button>
+                <button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-sm text-slate-300 hover:text-white transition-colors"
+                >
+                  <Settings className="w-3.5 h-3.5" />
+                  <span>Settings</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -750,6 +760,12 @@ const UserProfile = () => {
           onUpdate={handleProfileUpdate}
         />
       )}
+
+      {/* Add SettingsModal */}
+      <SettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+      />
     </div>
   );
 };

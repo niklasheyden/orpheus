@@ -1,55 +1,78 @@
-import React, { useEffect, useState } from 'react';
-import { X, CheckCircle } from 'lucide-react';
-import { create } from 'zustand';
+import React, { createContext, useContext, useState } from 'react';
+import { X } from 'lucide-react';
 
-interface ToastState {
-  message: string | null;
-  showToast: (message: string) => void;
-  hideToast: () => void;
+export interface ToastMessage {
+  title: string;
+  message: string;
+  type: 'success' | 'error' | 'info' | 'warning';
 }
 
-export const useToast = create<ToastState>((set) => ({
-  message: null,
-  showToast: (message) => {
-    set({ message });
-    setTimeout(() => {
-      set({ message: null });
-    }, 3000);
-  },
-  hideToast: () => set({ message: null }),
-}));
+interface ToastContextType {
+  showToast: (toast: ToastMessage) => void;
+}
 
-const Toast = () => {
-  const { message, hideToast } = useToast();
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider');
+  }
+  return context;
+};
+
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toast, setToast] = useState<ToastMessage | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
-  useEffect(() => {
-    if (message) {
-      setIsVisible(true);
-      const timer = setTimeout(() => {
-        setIsVisible(false);
-        setTimeout(hideToast, 300); // Wait for fade out animation
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [message, hideToast]);
-
-  if (!message) return null;
+  const showToast = (newToast: ToastMessage) => {
+    setToast(newToast);
+    setIsVisible(true);
+    setTimeout(() => {
+      setIsVisible(false);
+      setTimeout(() => setToast(null), 300);
+    }, 5000);
+  };
 
   return (
-    <div
-      className={`fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-medium shadow-lg transition-all duration-300 ${
-        isVisible
-          ? 'opacity-100 translate-y-0'
-          : 'opacity-0 translate-y-2'
-      } bg-slate-800 border border-slate-700/50 text-white backdrop-blur-sm`}
-    >
-      <div className="flex items-center gap-2">
-        <CheckCircle className="w-5 h-5 text-emerald-400" />
-        <span>{message}</span>
-      </div>
-    </div>
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      {toast && (
+        <div
+          className={`fixed bottom-4 right-4 transition-all duration-300 transform ${
+            isVisible ? 'translate-y-0 opacity-100' : 'translate-y-2 opacity-0'
+          }`}
+        >
+          <div className={`flex items-start gap-3 p-4 rounded-xl shadow-lg border ${
+            toast.type === 'success' ? 'bg-emerald-500/10 border-emerald-500/20' :
+            toast.type === 'error' ? 'bg-red-500/10 border-red-500/20' :
+            toast.type === 'warning' ? 'bg-amber-500/10 border-amber-500/20' :
+            'bg-sky-500/10 border-sky-500/20'
+          }`}>
+            <div className="flex-1">
+              <h3 className={`text-sm font-medium ${
+                toast.type === 'success' ? 'text-emerald-400' :
+                toast.type === 'error' ? 'text-red-400' :
+                toast.type === 'warning' ? 'text-amber-400' :
+                'text-sky-400'
+              }`}>
+                {toast.title}
+              </h3>
+              <p className="mt-1 text-sm text-slate-300">
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setIsVisible(false)}
+              className="text-slate-400 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+      )}
+    </ToastContext.Provider>
   );
 };
 
-export default Toast;
+export default ToastProvider;
