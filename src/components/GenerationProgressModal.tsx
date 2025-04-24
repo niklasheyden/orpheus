@@ -13,7 +13,7 @@ const GenerationProgressModal: React.FC<GenerationProgressModalProps> = ({ isOpe
   const stages = [
     {
       title: 'Identifying Key Insights',
-      description: 'Analyzing research paper to create a comprehensive summary',
+      description: 'Analyzing paper to create a comprehensive summary',
       icon: Sparkles,
       stage: 'summary'
     },

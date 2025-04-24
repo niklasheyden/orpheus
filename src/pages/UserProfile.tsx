@@ -326,6 +326,25 @@ const UserProfile = () => {
         <div className="relative max-w-7xl mx-auto px-4 pt-16">
           {/* Mobile Layout - Profile Header */}
           <div className="md:hidden flex flex-col items-center gap-4 mb-6">
+            {/* Add Edit Profile and Settings buttons for mobile - positioned at top right */}
+            {user && user.id === userId && (
+              <div className="fixed top-20 right-4 z-50 flex items-center gap-1.5">
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
+                >
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit</span>
+                </button>
+                <button
+                  onClick={() => setIsSettingsModalOpen(true)}
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
+                >
+                  <Settings className="w-3 h-3" />
+                  <span>Settings</span>
+                </button>
+              </div>
+            )}
             <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700/50 shadow-lg">
               <img
                 src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=0B0F15&color=fff`}
@@ -500,19 +519,19 @@ const UserProfile = () => {
 
             {/* Edit Profile Button (only shown to profile owner) */}
             {user && user.id === userId && (
-              <div className="flex items-center gap-2 absolute top-4 right-4">
+              <div className="flex items-center gap-1.5 absolute top-4 right-4">
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-sm text-slate-300 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
-                  <span>Edit Profile</span>
+                  <Edit2 className="w-3 h-3" />
+                  <span>Edit</span>
                 </button>
                 <button
                   onClick={() => setIsSettingsModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-sm text-slate-300 hover:text-white transition-colors"
+                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
                 >
-                  <Settings className="w-3.5 h-3.5" />
+                  <Settings className="w-3 h-3" />
                   <span>Settings</span>
                 </button>
               </div>

@@ -140,7 +140,7 @@ const Home = () => {
                   <>
                     <PodcastCard podcast={randomPodcast} />
                     {/* Play button indicator */}
-                    <div className="absolute -bottom-5 sm:-bottom-6 right-6 sm:right-8 transform flex items-start gap-3">
+                    <div className="absolute -bottom-6 sm:-bottom-6 right-6 sm:right-8 transform flex items-start gap-3">
                       <span className="text-xs sm:text-sm text-fuchsia-400/70 mt-4 sm:mt-5">
                         Listen to a sample
                       </span>
