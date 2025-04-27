@@ -193,8 +193,8 @@ const PodcastPage = () => {
   }, [user, id]);
 
   const recordPlay = useCallback(async () => {
-    if (!user || !podcast) {
-      console.log('Cannot record play: missing user or podcast', { user, podcast });
+    if (!podcast) {
+      console.log('Cannot record play: missing podcast', { podcast });
       return;
     }
     
@@ -237,12 +237,12 @@ const PodcastPage = () => {
     } catch (error) {
       console.error('Error in recordPlay:', error);
     }
-  }, [user, podcast, queryClient]);
+  }, [podcast, queryClient]);
 
-  // Monitor play duration only for authenticated users
+  // Monitor play duration for all users (authenticated or not)
   useEffect(() => {
-    if (!user || !isCurrentlyPlaying || !playStartTime) {
-      console.log('Play monitoring inactive:', { isCurrentlyPlaying, playStartTime, isAuthenticated: !!user });
+    if (!isCurrentlyPlaying || !playStartTime) {
+      console.log('Play monitoring inactive:', { isCurrentlyPlaying, playStartTime });
       return;
     }
 
@@ -264,7 +264,7 @@ const PodcastPage = () => {
       clearInterval(timer);
       console.log('Play monitoring cleared');
     };
-  }, [isCurrentlyPlaying, playStartTime, recordPlay, user]);
+  }, [isCurrentlyPlaying, playStartTime, recordPlay]);
 
   const handlePlayClick = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -817,7 +817,7 @@ const PodcastPage = () => {
           </div>
 
           {/* Right Column */}
-          <div className="lg:col-span-1 space-y-4 md:space-y-8">
+          <div className="lg:col-span-1 space-y-2 md:space-y-3">
             {/* Primary Action */}
             <button
               onClick={handlePlayClick}

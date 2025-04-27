@@ -215,47 +215,57 @@ const UserProfile = () => {
     }
   }, [userTotalStats]);
 
-  // Check if the current user is following this profile
-  const { data: followData, isLoading: isLoadingFollowData } = useQuery({
-    queryKey: ['follow-status', userId],
+  // Fetch follower/following counts (always enabled)
+  const { data: followCountsData, isLoading: isLoadingFollowCounts } = useQuery({
+    queryKey: ['follow-counts', userId],
     queryFn: async () => {
-      if (!user?.id) return { isFollowing: false, followCounts: { followers: 0, following: 0 } };
-      
-      const [followStatus, followerCount, followingCount] = await Promise.all([
-        supabase
-          .from('follows')
-          .select('*')
-          .eq('follower_id', user.id)
-          .eq('following_id', userId)
-          .single(),
-        supabase
-          .from('follows')
-          .select('*', { count: 'exact' })
-          .eq('following_id', userId),
-        supabase
-          .from('follows')
-          .select('*', { count: 'exact' })
-          .eq('follower_id', userId)
-      ]);
+      // Count followers
+      const { count: followersCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('following_id', userId);
+
+      // Count following
+      const { count: followingCount } = await supabase
+        .from('follows')
+        .select('*', { count: 'exact', head: true })
+        .eq('follower_id', userId);
 
       return {
-        isFollowing: !!followStatus,
-        followCounts: {
-          followers: followerCount.count || 0,
-          following: followingCount.count || 0
-        }
+        followers: followersCount || 0,
+        following: followingCount || 0
       };
+    },
+    enabled: !!userId
+  });
+
+  // Fetch isFollowing status (only if logged in)
+  const { data: isFollowingData, isLoading: isLoadingIsFollowing } = useQuery({
+    queryKey: ['is-following', user?.id, userId],
+    queryFn: async () => {
+      if (!user?.id) return false;
+      const { data: follows } = await supabase
+        .from('follows')
+        .select('id')
+        .eq('follower_id', user.id)
+        .eq('following_id', userId);
+      return follows && follows.length > 0;
     },
     enabled: !!user?.id && !!userId
   });
 
   // Update follow-related state when query data changes
   useEffect(() => {
-    if (followData) {
-      setIsFollowing(followData.isFollowing);
-      setFollowCounts(followData.followCounts);
+    if (typeof isFollowingData === 'boolean') {
+      setIsFollowing(isFollowingData);
     }
-  }, [followData]);
+  }, [isFollowingData]);
+
+  useEffect(() => {
+    if (followCountsData) {
+      setFollowCounts(followCountsData);
+    }
+  }, [followCountsData]);
 
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
@@ -280,8 +290,9 @@ const UserProfile = () => {
       }
 
       // Invalidate relevant queries
-      queryClient.invalidateQueries({ queryKey: ['is-following', userId] });
+      queryClient.invalidateQueries({ queryKey: ['is-following', user?.id, userId] });
       queryClient.invalidateQueries({ queryKey: ['follow-counts', userId] });
+      queryClient.invalidateQueries({ queryKey: ['public-profile', userId] });
     } catch (error) {
       console.error('Error toggling follow:', error);
     }
@@ -732,11 +743,11 @@ const UserProfile = () => {
               </div>
             </div>
 
-            {/* Follow Button */}
-            {userId && (
+            {/* Follow Button (only show if viewing another user's profile) */}
+            {userId && (!user || user.id !== userId) && (
               <button
                 onClick={user ? handleFollowToggle : () => navigate('/waitlist')}
-                disabled={isLoadingFollowData}
+                disabled={isLoadingIsFollowing}
                 className={`absolute top-4 right-4 group inline-flex items-center px-4 py-2 text-xs font-medium transition-all duration-200
                   ${user 
                     ? (isFollowing 
@@ -758,12 +769,12 @@ const UserProfile = () => {
                     isFollowing ? (
                       <>
                         <UserMinus className="w-3.5 h-3.5 mr-1.5" />
-                        Disconnect
+                        Unfollow
                       </>
                     ) : (
                       <>
                         <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                        Connect
+                        Follow
                       </>
                     )
                   ) : (
@@ -776,18 +787,29 @@ const UserProfile = () => {
               </button>
             )}
 
-            {/* Edit Profile Button */}
+            {/* Edit Profile Button & Share Button */}
             {user && user.id === userId && (
-              <button
-                onClick={() => setIsEditModalOpen(true)}
-                className="absolute top-4 right-4 group inline-flex items-center px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-300 transition-all duration-200"
-              >
-                <div className="absolute inset-0 rounded-lg bg-slate-800/80 backdrop-blur-sm group-hover:bg-slate-800 transition-all duration-200"></div>
-                <span className="relative flex items-center">
-                  <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-                  Edit Profile
-                </span>
-              </button>
+              <div className="absolute top-4 right-4 flex gap-3">
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="group flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 transition-colors relative"
+                  aria-label="Edit Profile"
+                  title="Edit Profile"
+                >
+                  <Edit2 className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                </button>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(window.location.href);
+                    alert('Profile link copied to clipboard!');
+                  }}
+                  className="group flex items-center justify-center w-10 h-10 rounded-full bg-slate-800/80 hover:bg-slate-700 transition-colors relative"
+                  aria-label="Share Profile"
+                  title="Share Profile"
+                >
+                  <Share2 className="w-5 h-5 text-slate-300 group-hover:text-white" />
+                </button>
+              </div>
             )}
           </div>
         </div>
