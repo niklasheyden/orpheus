@@ -102,23 +102,18 @@ const EmptyPublications = () => (
 );
 
 const UserProfile = () => {
-  const { userId } = useParams();
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { userId } = useParams();
+  const navigate = useNavigate();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [sortMode, setSortMode] = useState<'recent' | 'popular'>('recent');
-  const navigate = useNavigate();
+  const [isLoadingFollow, setIsLoadingFollow] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followCounts, setFollowCounts] = useState<{ followers: number; following: number }>({ followers: 0, following: 0 });
+  const [totalStats, setTotalStats] = useState<{ likes: number; saves: number }>({ likes: 0, saves: 0 });
   const [searchParams] = useSearchParams();
   const { subscription } = useSubscription();
-
-  useEffect(() => {
-    if (!user) {
-      // Store the return URL in session storage before redirecting to login
-      const returnUrl = window.location.pathname + window.location.search;
-      sessionStorage.setItem('returnUrl', returnUrl);
-      navigate('/login');
-    }
-  }, [user, navigate]);
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     // Check if we have a session_id from Stripe redirect
@@ -190,7 +185,7 @@ const UserProfile = () => {
   }, [userPodcasts, sortMode]);
 
   // Fetch total likes and saves for user's podcasts
-  const { data: totalStats } = useQuery({
+  const { data: userTotalStats } = useQuery({
     queryKey: ['user-total-likes', userId],
     queryFn: async () => {
       if (!userPodcasts?.length) return { likes: 0, saves: 0 };
@@ -210,33 +205,29 @@ const UserProfile = () => {
         likes: likesResponse.count || 0,
         saves: savesResponse.count || 0
       };
-    },
-    enabled: !!userPodcasts?.length
+    }
   });
+
+  // Update totalStats when userTotalStats changes
+  useEffect(() => {
+    if (userTotalStats) {
+      setTotalStats(userTotalStats);
+    }
+  }, [userTotalStats]);
 
   // Check if the current user is following this profile
-  const { data: isFollowing, isLoading: isLoadingFollow } = useQuery({
-    queryKey: ['is-following', userId],
+  const { data: followData, isLoading: isLoadingFollowData } = useQuery({
+    queryKey: ['follow-status', userId],
     queryFn: async () => {
-      if (!user) return false;
+      if (!user?.id) return { isFollowing: false, followCounts: { followers: 0, following: 0 } };
       
-      const { count } = await supabase
-        .from('follows')
-        .select('*', { count: 'exact' })
-        .eq('follower_id', user.id)
-        .eq('following_id', userId)
-        .single();
-
-      return count === 1;
-    },
-    enabled: !!user && user.id !== userId
-  });
-
-  // Get follower and following counts
-  const { data: followCounts } = useQuery({
-    queryKey: ['follow-counts', userId],
-    queryFn: async () => {
-      const [followers, following] = await Promise.all([
+      const [followStatus, followerCount, followingCount] = await Promise.all([
+        supabase
+          .from('follows')
+          .select('*')
+          .eq('follower_id', user.id)
+          .eq('following_id', userId)
+          .single(),
         supabase
           .from('follows')
           .select('*', { count: 'exact' })
@@ -248,11 +239,23 @@ const UserProfile = () => {
       ]);
 
       return {
-        followers: followers.count || 0,
-        following: following.count || 0
+        isFollowing: !!followStatus,
+        followCounts: {
+          followers: followerCount.count || 0,
+          following: followingCount.count || 0
+        }
       };
-    }
+    },
+    enabled: !!user?.id && !!userId
   });
+
+  // Update follow-related state when query data changes
+  useEffect(() => {
+    if (followData) {
+      setIsFollowing(followData.isFollowing);
+      setFollowCounts(followData.followCounts);
+    }
+  }, [followData]);
 
   // Handle follow/unfollow
   const handleFollowToggle = async () => {
@@ -730,32 +733,43 @@ const UserProfile = () => {
             </div>
 
             {/* Follow Button */}
-            {user && user.id !== userId && (
+            {userId && (
               <button
-                onClick={handleFollowToggle}
-                disabled={isLoadingFollow}
+                onClick={user ? handleFollowToggle : () => navigate('/waitlist')}
+                disabled={isLoadingFollowData}
                 className={`absolute top-4 right-4 group inline-flex items-center px-4 py-2 text-xs font-medium transition-all duration-200
-                  ${isFollowing 
-                    ? 'text-slate-400 hover:text-slate-300' 
+                  ${user 
+                    ? (isFollowing 
+                        ? 'text-slate-400 hover:text-slate-300' 
+                        : 'text-white')
                     : 'text-white'
                   }
                 `}
               >
                 <div className={`absolute inset-0 rounded-lg transition-all duration-200 ${
-                  isFollowing 
-                    ? 'bg-slate-800/80 backdrop-blur-sm group-hover:bg-slate-800' 
+                  user
+                    ? (isFollowing 
+                        ? 'bg-slate-800/80 backdrop-blur-sm group-hover:bg-slate-800' 
+                        : 'bg-gradient-to-r from-blue-600 to-purple-600 group-hover:from-blue-500 group-hover:to-purple-500')
                     : 'bg-gradient-to-r from-blue-600 to-purple-600 group-hover:from-blue-500 group-hover:to-purple-500'
                 }`}></div>
                 <span className="relative flex items-center">
-                  {isFollowing ? (
-                    <>
-                      <UserMinus className="w-3.5 h-3.5 mr-1.5" />
-                      Disconnect
-                    </>
+                  {user ? (
+                    isFollowing ? (
+                      <>
+                        <UserMinus className="w-3.5 h-3.5 mr-1.5" />
+                        Disconnect
+                      </>
+                    ) : (
+                      <>
+                        <UserPlus className="w-3.5 h-3.5 mr-1.5" />
+                        Connect
+                      </>
+                    )
                   ) : (
                     <>
                       <UserPlus className="w-3.5 h-3.5 mr-1.5" />
-                      Connect
+                      Sign in to Connect
                     </>
                   )}
                 </span>

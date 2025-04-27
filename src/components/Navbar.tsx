@@ -95,7 +95,7 @@ const Navbar = ({ session }: NavbarProps) => {
               <>
                 <Link to="/account" className={linkClasses('/account')}>
                   <Settings className="mr-2 h-4 w-4 inline-block" />
-                  <span>Account</span>
+                  <span>Settings</span>
                 </Link>
                 <button
                   onClick={handleSignOut}
@@ -213,7 +213,7 @@ const Navbar = ({ session }: NavbarProps) => {
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
                       <Settings className="mr-3 h-5 w-5" />
-                      <span>Account</span>
+                      <span>Settings</span>
                     </Link>
                     <button
                       onClick={handleSignOut}

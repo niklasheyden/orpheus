@@ -90,6 +90,7 @@ function App() {
                       <Route path="/imprint" element={<Imprint />} />
                       <Route path="/pricing" element={<Pricing />} />
                       <Route path="/subscription/success" element={<SubscriptionSuccess />} />
+                      <Route path="/user/:userId" element={<UserProfile />} />
 
                       {/* Protected Routes */}
                       {session ? (
@@ -98,7 +99,6 @@ function App() {
                           <Route path="/generate" element={<Generate />} />
                           <Route path="/profile" element={<Profile />} />
                           <Route path="/playlist" element={<PlaylistPage />} />
-                          <Route path="/user/:userId" element={<UserProfile />} />
                           <Route path="/trending" element={<TrendingPage />} />
                           <Route path="/most-liked" element={<MostLikedPage />} />
                           <Route path="/recent" element={<RecentPage />} />

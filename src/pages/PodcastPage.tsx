@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Play, Pause, Download, Share2, Calendar, Users, BookOpen, Trash2, Edit, Plus, Minus, Heart, Bookmark, BookmarkCheck, ListMusic, MoreHorizontal, MoreVertical, Clock } from 'lucide-react';
+import { Play, Pause, Share2, Calendar, Users, BookOpen, Trash2, Edit, Plus, Minus, Heart, Bookmark, BookmarkCheck, ListMusic, MoreHorizontal, MoreVertical, Clock } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
@@ -288,7 +288,11 @@ const PodcastPage = () => {
     
     if (lastPlayTime && now - lastPlayTime < PLAY_COOLDOWN && !isCurrentlyPlaying && currentPodcast?.id !== podcast.id) {
       console.log('Play cooldown active, waiting...');
-      showToast(`Please wait before playing again`);
+      showToast({
+        title: 'Notice',
+        message: 'Please wait before playing again',
+        type: 'info'
+      });
       return;
     }
 
@@ -325,54 +329,6 @@ const PodcastPage = () => {
       message: 'Link copied to clipboard',
       type: 'success'
     });
-  };
-
-  const handleDownload = async () => {
-    if (!user) {
-      navigate('/auth');
-      showToast({
-        title: 'Sign in Required',
-        message: 'Sign in to download podcasts',
-        type: 'info'
-      });
-      return;
-    }
-
-    try {
-      setIsDownloading(true);
-      const signedUrl = await getSignedUrl();
-      if (!signedUrl) {
-        showToast({
-          title: 'Error',
-          message: 'Failed to get download URL',
-          type: 'error'
-        });
-        return;
-      }
-
-      // Create a temporary link element
-      const link = document.createElement('a');
-      link.href = signedUrl;
-      link.download = `${podcast.title}.mp3`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      showToast({
-        title: 'Success',
-        message: 'Download started',
-        type: 'success'
-      });
-    } catch (error) {
-      console.error('Error downloading podcast:', error);
-      showToast({
-        title: 'Error',
-        message: 'Failed to download podcast',
-        type: 'error'
-      });
-    } finally {
-      setIsDownloading(false);
-    }
   };
 
   const handleDeleteClick = () => {
@@ -906,19 +862,12 @@ const PodcastPage = () => {
               ) : null}
 
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={handleDownload}
-                  className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
-                >
-                  <Download size={18} />
-                  Download
-                </button>
                 {podcast.doi && (
                   <a
                     href={`https://doi.org/${podcast.doi}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium"
+                    className="flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 transition-colors rounded-lg text-slate-300 font-medium col-span-2"
                   >
                     <BookOpen size={18} />
                     View Paper
