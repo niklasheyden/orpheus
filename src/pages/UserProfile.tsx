@@ -80,24 +80,19 @@ const getStatusColor = (status: string | null): { text: string, dot: string } =>
   }
 };
 
-const EmptyPublications = () => (
+const EmptyPublications = ({ isOwnProfile }: { isOwnProfile: boolean }) => (
   <div className="flex flex-col items-center justify-center w-full h-full min-h-[300px] -translate-y-8">
-    <Link
-      to="/generate"
-      className="inline-flex items-center gap-2 w-[280px] justify-center bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
-    >
-      <Plus className="w-5 h-5" />
-      <span>Create Your First Podcast</span>
-    </Link>
-    {/* Temporarily hidden - Discover Podcasts button
-    <Link
-      to="/discover"
-      className="inline-flex items-center gap-2 w-[280px] justify-center bg-slate-800/80 backdrop-blur-sm text-slate-300 hover:text-white rounded-full px-6 py-3 font-medium border border-slate-700/50 hover:bg-slate-800 transition-all"
-    >
-      <Compass className="w-5 h-5" />
-      <span>Discover Podcasts</span>
-    </Link>
-    */}
+    {isOwnProfile ? (
+      <Link
+        to="/generate"
+        className="inline-flex items-center gap-2 w-[280px] justify-center bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-6 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
+      >
+        <Plus className="w-5 h-5" />
+        <span>Create Your First Podcast</span>
+      </Link>
+    ) : (
+      <span className="text-slate-400 text-lg">This user hasn't created any podcasts yet.</span>
+    )}
   </div>
 );
 
@@ -114,6 +109,7 @@ const UserProfile = () => {
   const [searchParams] = useSearchParams();
   const { subscription } = useSubscription();
   const queryClient = useQueryClient();
+  const isOwnProfile = !!user && user.id === userId;
 
   useEffect(() => {
     // Check if we have a session_id from Stripe redirect
@@ -706,7 +702,7 @@ const UserProfile = () => {
                         </div>
                       </div>
                     ) : userPodcasts?.length === 0 ? (
-                      <EmptyPublications />
+                      <EmptyPublications isOwnProfile={isOwnProfile} />
                     ) : (
                       sortedPodcasts.map(podcast => (
                         <div key={podcast.id} className="w-full">
@@ -728,7 +724,7 @@ const UserProfile = () => {
                             </div>
                           </div>
                         ) : userPodcasts?.length === 0 ? (
-                          <EmptyPublications />
+                          <EmptyPublications isOwnProfile={isOwnProfile} />
                         ) : (
                           sortedPodcasts.map(podcast => (
                             <div key={podcast.id} className="flex-none w-[280px]">
