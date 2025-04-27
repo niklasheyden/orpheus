@@ -1,17 +1,21 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { User, Building2, BookOpen, Heart, Headphones, ListMusic, Upload, X } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import type { Podcast, Profile } from '../lib/types';
 import PodcastCard from '../components/PodcastCard';
 import EditProfileForm from '../components/EditProfileForm';
+import { useSubscription } from '../hooks/useSubscription';
 
 const Profile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [showEditForm, setShowEditForm] = useState(false);
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { subscription } = useSubscription();
 
   // Fetch profile data
   const { data: profile, isLoading: isLoadingProfile } = useQuery<Profile>({
@@ -156,6 +160,25 @@ const Profile = () => {
     },
     enabled: !!user
   });
+
+  useEffect(() => {
+    if (!user) {
+      // Store the return URL in session storage before redirecting to login
+      const returnUrl = window.location.pathname + window.location.search;
+      sessionStorage.setItem('returnUrl', returnUrl);
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    // Check if we have a session_id from Stripe redirect
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      // Remove the session_id from the URL to keep it clean
+      searchParams.delete('session_id');
+      navigate({ search: searchParams.toString() }, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   if (isLoadingProfile) {
     return (

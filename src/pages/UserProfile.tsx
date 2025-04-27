@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { useParams } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../hooks/useAuth';
+import { useSubscription } from '../hooks/useSubscription';
 import { supabase } from '../lib/supabase';
 import { 
   Building2, 
@@ -28,13 +29,11 @@ import {
   TrendingUp,
   Zap,
   Plus,
-  Compass,
-  Settings
+  Compass
 } from 'lucide-react';
 import type { Profile, Podcast } from '../lib/types';
 import PodcastCard from '../components/PodcastCard';
 import EditProfileModal from '../components/EditProfileModal';
-import SettingsModal from '../components/SettingsModal';
 import { Link } from 'react-router-dom';
 
 // Banner backgrounds inspired by scientific themes
@@ -49,7 +48,7 @@ const BANNER_BACKGROUNDS = [
 const getStatusColor = (status: string | null): { text: string, dot: string } => {
   switch (status) {
     case 'PhD Student':
-      return { text: 'text-blue-400', dot: 'bg-blue-500' };
+      return { text: 'text-amber-400', dot: 'bg-amber-500' };
     case 'Master\'s Student':
       return { text: 'text-indigo-400', dot: 'bg-indigo-500' };
     case 'Postdoctoral Researcher':
@@ -63,7 +62,7 @@ const getStatusColor = (status: string | null): { text: string, dot: string } =>
     case 'Research Scientist':
       return { text: 'text-orange-400', dot: 'bg-orange-500' };
     case 'Industry Professional':
-      return { text: 'text-amber-400', dot: 'bg-amber-500' };
+      return { text: 'text-blue-400', dot: 'bg-blue-500' };
     case 'Data Scientist':
       return { text: 'text-yellow-400', dot: 'bg-yellow-500' };
     case 'Software Engineer':
@@ -107,8 +106,29 @@ const UserProfile = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [sortMode, setSortMode] = useState<'recent' | 'popular'>('recent');
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const { subscription } = useSubscription();
+
+  useEffect(() => {
+    if (!user) {
+      // Store the return URL in session storage before redirecting to login
+      const returnUrl = window.location.pathname + window.location.search;
+      sessionStorage.setItem('returnUrl', returnUrl);
+      navigate('/login');
+    }
+  }, [user, navigate]);
+
+  useEffect(() => {
+    // Check if we have a session_id from Stripe redirect
+    const sessionId = searchParams.get('session_id');
+    if (sessionId) {
+      // Remove the session_id from the URL to keep it clean
+      searchParams.delete('session_id');
+      navigate({ search: searchParams.toString() }, { replace: true });
+    }
+  }, [searchParams, navigate]);
 
   // Fetch profile data
   const { data: profile, isLoading: isLoadingProfile } = useQuery<Profile>({
@@ -326,25 +346,6 @@ const UserProfile = () => {
         <div className="relative max-w-7xl mx-auto px-4 pt-16">
           {/* Mobile Layout - Profile Header */}
           <div className="md:hidden flex flex-col items-center gap-4 mb-6">
-            {/* Add Edit Profile and Settings buttons for mobile - positioned at top right */}
-            {user && user.id === userId && (
-              <div className="fixed top-20 right-4 z-50 flex items-center gap-1.5">
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => setIsSettingsModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  <Settings className="w-3 h-3" />
-                  <span>Settings</span>
-                </button>
-              </div>
-            )}
             <div className="relative w-20 h-20 rounded-full overflow-hidden border-2 border-slate-700/50 shadow-lg">
               <img
                 src={profile?.avatar_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profile?.name || 'User')}&background=0B0F15&color=fff`}
@@ -373,7 +374,14 @@ const UserProfile = () => {
                     {interest.trim()
                       .replace(/[\[\]"']/g, '') // Remove brackets and quotes
                       .split(' ')
-                      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                      .map(word => {
+                        // Preserve existing capitalization for acronyms (words with 2 or more uppercase letters)
+                        if (word.replace(/[^A-Z]/g, '').length >= 2) {
+                          return word;
+                        }
+                        // Otherwise capitalize first letter only
+                        return word.charAt(0).toUpperCase() + word.slice(1);
+                      })
                       .join(' ')}
                   </span>
                 )) || (
@@ -516,26 +524,6 @@ const UserProfile = () => {
                 </div>
               </div>
             </div>
-
-            {/* Edit Profile Button (only shown to profile owner) */}
-            {user && user.id === userId && (
-              <div className="flex items-center gap-1.5 absolute top-4 right-4">
-                <button
-                  onClick={() => setIsEditModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  <Edit2 className="w-3 h-3" />
-                  <span>Edit</span>
-                </button>
-                <button
-                  onClick={() => setIsSettingsModalOpen(true)}
-                  className="inline-flex items-center gap-1 px-2 py-1 bg-slate-800/50 backdrop-blur-sm border border-slate-700/50 rounded-full text-xs text-slate-300 hover:text-white transition-colors"
-                >
-                  <Settings className="w-3 h-3" />
-                  <span>Settings</span>
-                </button>
-              </div>
-            )}
           </div>
 
           {/* Main Profile Info - Desktop Only */}
@@ -565,7 +553,14 @@ const UserProfile = () => {
                   {interest.trim()
                     .replace(/[\[\]"']/g, '') // Remove brackets and quotes
                     .split(' ')
-                    .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+                    .map(word => {
+                      // Preserve existing capitalization for acronyms (words with 2 or more uppercase letters)
+                      if (word.replace(/[^A-Z]/g, '').length >= 2) {
+                        return word;
+                      }
+                      // Otherwise capitalize first letter only
+                      return word.charAt(0).toUpperCase() + word.slice(1);
+                    })
                     .join(' ')}
                 </span>
               )) || (
@@ -766,6 +761,20 @@ const UserProfile = () => {
                 </span>
               </button>
             )}
+
+            {/* Edit Profile Button */}
+            {user && user.id === userId && (
+              <button
+                onClick={() => setIsEditModalOpen(true)}
+                className="absolute top-4 right-4 group inline-flex items-center px-4 py-2 text-xs font-medium text-slate-400 hover:text-slate-300 transition-all duration-200"
+              >
+                <div className="absolute inset-0 rounded-lg bg-slate-800/80 backdrop-blur-sm group-hover:bg-slate-800 transition-all duration-200"></div>
+                <span className="relative flex items-center">
+                  <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+                  Edit Profile
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -779,12 +788,6 @@ const UserProfile = () => {
           onUpdate={handleProfileUpdate}
         />
       )}
-
-      {/* Add SettingsModal */}
-      <SettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-      />
     </div>
   );
 };

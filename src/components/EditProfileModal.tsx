@@ -21,11 +21,45 @@ const BANNER_OPTIONS = [
 
 const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, isOpen, onClose, onUpdate }) => {
   const { user } = useAuth();
+
+  // Helper function for formatting research interests
+  const formatInitialResearchInterests = (interests: string): string => {
+    try {
+      // Check if it's a JSON string array
+      if (interests.startsWith('[') && interests.endsWith(']')) {
+        const parsed = JSON.parse(interests);
+        if (Array.isArray(parsed)) {
+          return parsed
+            .map(interest => {
+              // Replace hyphens with spaces and split into words
+              return interest
+                .replace(/-/g, ' ')
+                .split(' ')
+                .map((word: string) => {
+                  // Preserve existing capitalization for acronyms
+                  if (word.replace(/[^A-Z]/g, '').length >= 2) {
+                    return word;
+                  }
+                  return word.charAt(0).toUpperCase() + word.slice(1);
+                })
+                .join(' ');
+            })
+            .join(', ');
+        }
+      }
+      // If not a JSON array or parsing fails, return as is
+      return interests;
+    } catch {
+      // If JSON parsing fails, return as is
+      return interests;
+    }
+  };
+
   const [formData, setFormData] = useState({
     name: profile.name || '',
     affiliation: profile.affiliation || '',
     bio: profile.bio || '',
-    research_interests: profile.research_interests || '',
+    research_interests: formatInitialResearchInterests(profile.research_interests || ''),
     website: profile.website || '',
     github: profile.github || '',
     linkedin: profile.linkedin || '',
@@ -47,7 +81,19 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, isOpen, on
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    
+    // Special handling for research interests to clean the format
+    if (name === 'research_interests') {
+      // Split by comma, clean each interest, and join back
+      const cleanedInterests = value
+        .split(',')
+        .map(interest => interest.trim())
+        .filter(interest => interest.length > 0)
+        .join(', ');
+      setFormData(prev => ({ ...prev, [name]: cleanedInterests }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+    }
   };
 
   const handleBannerOptionChange = (optionId: string) => {
@@ -376,8 +422,11 @@ const EditProfileModal: React.FC<EditProfileModalProps> = ({ profile, isOpen, on
                     value={formData.research_interests}
                     onChange={handleChange}
                     className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-lg text-white placeholder-slate-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Comma-separated list of research interests"
+                    placeholder="e.g. Machine Learning, Quantum Computing, Neuroscience"
                   />
+                  <p className="mt-1 text-xs text-slate-400">
+                    Separate multiple interests with commas. Each interest will be displayed as a tag on your profile.
+                  </p>
                 </div>
               </div>
 

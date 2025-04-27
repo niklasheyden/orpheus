@@ -140,7 +140,7 @@ const Onboarding = () => {
     },
     {
       title: "You're All Set!",
-      description: "Your personalized research podcast experience awaits",
+      description: "Your profile is ready! Start by uploading your first podcast.",
       icon: <Share2 className="w-8 h-8 text-emerald-400" />
     }
   ];
@@ -367,7 +367,7 @@ const Onboarding = () => {
                 </motion.div>
               )}
 
-              {step === 5 && (
+              {/* {step === 5 && (
                 <motion.div
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -380,7 +380,7 @@ const Onboarding = () => {
                     Your profile is ready! Let's start exploring research podcasts.
                   </p>
                 </motion.div>
-              )}
+              )} */}
             </div>
 
             {/* Navigation */}

@@ -395,22 +395,25 @@ Format: Single paragraph, detailed description`
         formData.abstract,
         formData.keywords
       );
-
-      const imageResponse = await openai.images.generate({
-        model: "dall-e-3",
-        prompt: imagePrompt,
-        size: "1024x1024",
-        quality: "standard",
-        style: "natural",
-        n: 1,
-      });
-
-      const tempImageUrl = imageResponse.data[0].url;
-      if (!tempImageUrl) {
-        throw new Error('Failed to generate cover image');
+      if (!imagePrompt) {
+        throw new Error('Image prompt is empty. Please check your title, abstract, and keywords.');
       }
 
-      const coverImageUrl = await saveImageToSupabase(tempImageUrl, user!.id);
+      // Call the Edge Function to generate and upload the image
+      const imageResponse = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/fetch-image`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
+        },
+        body: JSON.stringify({ prompt: imagePrompt, userId: user!.id }),
+      });
+      const imageData = await imageResponse.json();
+      if (!imageResponse.ok) throw new Error(imageData.error || 'Failed to generate cover image');
+      const coverImageUrl = imageData.imageUrl;
+      if (!coverImageUrl) {
+        throw new Error('Failed to generate cover image.');
+      }
 
       // Generate script
       setCurrentStage('script');
@@ -481,65 +484,98 @@ Format: Single paragraph, detailed description`
         instructions: "Speak in a engaging and positive, yet professsional tone that is appealing to an academic audience.",
       });
 
-      const audioBlob = await speechResponse.blob();
-      
-      // Upload audio file
-      const audioFileName = `${user!.id}/${Date.now()}-podcast-audio.mp3`;
-      const { data: audioData, error: audioUploadError } = await supabase.storage
-        .from('podcasts')
-        .upload(audioFileName, audioBlob, {
-          contentType: 'audio/mpeg',
-          cacheControl: '3600',
-          upsert: false
-        });
+      // Debug: log content type and status
+      const contentType = speechResponse.headers.get('content-type');
+      console.log('OpenAI speech response content-type:', contentType);
+      console.log('OpenAI speech response status:', speechResponse.status);
 
-      if (audioUploadError) {
-        throw new Error(`Failed to upload audio file: ${audioUploadError.message}`);
+      if (contentType && contentType.startsWith('audio/')) {
+        const audioBlob = await speechResponse.blob();
+        console.log('Audio blob for upload:', audioBlob);
+        // Upload audio as ArrayBuffer to ensure correct content type
+        const audioArrayBuffer = await audioBlob.arrayBuffer();
+        const audioFileName = `${user!.id}/${Date.now()}-podcast-audio.mp3`;
+        const { data: audioData, error: audioUploadError } = await supabase.storage
+          .from('podcasts')
+          .upload(audioFileName, audioArrayBuffer, {
+            contentType: 'audio/mpeg',
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (audioUploadError) {
+          throw new Error(`Failed to upload audio file: ${audioUploadError.message}`);
+        }
+
+        const { data: { publicUrl: audioUrl } } = supabase.storage
+          .from('podcasts')
+          .getPublicUrl(audioFileName);
+
+        if (!audioUrl) {
+          throw new Error('Failed to generate public URL for audio file');
+        }
+
+        // Save podcast
+        setCurrentStage('complete');
+        setProgress(100);
+        // Debug: log user id and session
+        console.log('Inserting podcast with user_id:', user?.id);
+        const session = await supabase.auth.getSession();
+        console.log('Current session:', session);
+        const { error: podcastError } = await supabase
+          .from('podcasts')
+          .insert([
+            {
+              title: formData.title,
+              abstract: formData.abstract,
+              summary: summary,
+              authors: formData.authors,
+              publishing_year: parseInt(formData.publishingYear),
+              field_of_research: formData.fieldOfResearch || 'Computer Science',
+              doi: formData.doi || null,
+              keywords: formData.keywords,
+              cover_image_url: coverImageUrl,
+              audio_url: audioUrl,
+              script: script,
+              user_id: user!.id,
+              is_public: formData.isPublic
+            }
+          ]);
+
+        if (podcastError) {
+          throw new Error(`Failed to save podcast: ${podcastError.message}`);
+        }
+
+        // Fetch the latest podcast for this user (should be the one just created)
+        const { data: latestPodcast, error: fetchError } = await supabase
+          .from('podcasts')
+          .select('id')
+          .eq('user_id', user!.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (fetchError || !latestPodcast) {
+          throw new Error('Podcast was created but could not be found for redirect.');
+        }
+
+        showToast({ title: 'Success', message: 'Podcast generated successfully!', type: 'success' });
+        navigate(`/podcast/${latestPodcast.id}`);
+      } else {
+        // Not audio, try to parse error
+        const errorText = await speechResponse.text();
+        console.error('OpenAI speech error response:', errorText);
+        let errorMsg = 'Failed to generate audio file';
+        try {
+          const errorJson = JSON.parse(errorText);
+          errorMsg = errorJson.error || errorMsg;
+        } catch {}
+        throw new Error(errorMsg);
       }
-
-      const { data: { publicUrl: audioUrl } } = supabase.storage
-        .from('podcasts')
-        .getPublicUrl(audioFileName);
-
-      if (!audioUrl) {
-        throw new Error('Failed to generate public URL for audio file');
-      }
-
-      // Save podcast
-      setCurrentStage('complete');
-      setProgress(100);
-      const { data: podcastData, error: podcastError } = await supabase
-        .from('podcasts')
-        .insert([
-          {
-            title: formData.title,
-            abstract: formData.abstract,
-            summary: summary,
-            authors: formData.authors,
-            publishing_year: parseInt(formData.publishingYear),
-            field_of_research: formData.fieldOfResearch,
-            doi: formData.doi || null,
-            keywords: formData.keywords,
-            cover_image_url: coverImageUrl,
-            audio_url: audioUrl,
-            script: script,
-            user_id: user!.id,
-            is_public: formData.isPublic
-          }
-        ])
-        .select()
-        .single();
-
-      if (podcastError) {
-        throw new Error(`Failed to save podcast: ${podcastError.message}`);
-      }
-
-      showToast('Podcast generated successfully!');
-      navigate(`/podcast/${podcastData.id}`);
     } catch (error: any) {
       console.error('Error generating podcast:', error);
       setError(error.message || 'Failed to generate podcast');
-      showToast('Failed to generate podcast');
+      showToast({ title: 'Error', message: 'Failed to generate podcast', type: 'error' });
     } finally {
       setIsGenerating(false);
     }

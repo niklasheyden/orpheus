@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { AudioWaveform, Home, Compass, Sparkles, User, LogOut, Menu, X, ListMusic } from 'lucide-react';
+import { AudioWaveform, Home, Compass, Sparkles, User, LogOut, Menu, X, ListMusic, CreditCard, Settings } from 'lucide-react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../lib/supabase';
 
@@ -92,27 +92,34 @@ const Navbar = ({ session }: NavbarProps) => {
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex md:items-center md:space-x-3">
             {session ? (
-              <button
-                onClick={handleSignOut}
-                className="relative -mx-3 -my-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors delay-150 hover:text-slate-100 hover:delay-[0ms]"
-              >
-                <LogOut className="mr-2 h-4 w-4 inline-block" />
-                <span>Logout</span>
-              </button>
+              <>
+                <Link to="/account" className={linkClasses('/account')}>
+                  <Settings className="mr-2 h-4 w-4 inline-block" />
+                  <span>Account</span>
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="relative -mx-3 -my-2 rounded-lg px-3 py-2 text-sm text-slate-400 transition-colors delay-150 hover:text-slate-100 hover:delay-[0ms]"
+                >
+                  <LogOut className="mr-2 h-4 w-4 inline-block" />
+                  <span>Logout</span>
+                </button>
+              </>
             ) : (
               <>
                 <Link
                   to="/auth"
-                  className="group relative rounded-full px-4 py-2 text-[13px] text-slate-300 transition-all hover:text-slate-100 bg-slate-800/50 border border-slate-700/50"
+                  className="inline-flex items-center justify-center rounded-full border border-slate-700 bg-slate-800 px-4 py-2 text-sm font-medium text-slate-300 hover:bg-slate-700 hover:text-white transition-colors"
                 >
-                  Sign In
+                  <User className="mr-2 h-4 w-4" />
+                  <span>Login</span>
                 </Link>
                 <Link
                   to="/waitlist"
-                  className="group relative rounded-full bg-gradient-to-r from-sky-400/80 to-indigo-500/80 px-4 py-2 text-[13px] text-white transition-all hover:text-sm"
+                  className="inline-flex items-center justify-center rounded-full bg-gradient-to-r from-sky-400 to-indigo-400 px-4 py-2 text-sm font-medium text-white hover:from-sky-300 hover:to-indigo-300 transition-colors"
                 >
-                  <span className="absolute inset-0 rounded-full bg-gradient-to-r from-sky-400 to-indigo-500 opacity-0 transition-opacity group-hover:opacity-100" />
-                  <span className="relative">Get Started</span>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  <span>Get Started</span>
                 </Link>
               </>
             )}
@@ -200,6 +207,14 @@ const Navbar = ({ session }: NavbarProps) => {
                       <User className="mr-3 h-5 w-5" />
                       <span>Profile</span>
                     </Link>
+                    <Link
+                      to="/account"
+                      className={`flex items-center px-3 py-3 rounded-lg text-base ${isActive('/account') ? 'text-sky-400' : 'text-slate-400 hover:text-slate-100'}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <Settings className="mr-3 h-5 w-5" />
+                      <span>Account</span>
+                    </Link>
                     <button
                       onClick={handleSignOut}
                       className="flex items-center px-3 py-3 rounded-lg text-base text-slate-400 hover:text-slate-100"
@@ -212,17 +227,19 @@ const Navbar = ({ session }: NavbarProps) => {
                   <>
                     <Link
                       to="/auth"
-                      className="flex items-center justify-center px-4 py-3 rounded-lg text-base text-slate-300 hover:text-white bg-slate-800/50 border border-slate-700/50"
+                      className="flex items-center px-3 py-3 rounded-full text-base text-slate-400 hover:text-slate-100 border border-slate-700 bg-slate-800"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Sign In
+                      <User className="mr-3 h-5 w-5" />
+                      <span>Login</span>
                     </Link>
                     <Link
                       to="/waitlist"
-                      className="flex items-center justify-center px-4 py-3 rounded-lg text-base text-white bg-gradient-to-r from-sky-400/80 to-indigo-500/80"
+                      className="flex items-center px-3 py-3 rounded-full text-base bg-gradient-to-r from-sky-400 to-indigo-400 text-white hover:from-sky-300 hover:to-indigo-300"
                       onClick={() => setIsMobileMenuOpen(false)}
                     >
-                      Get Started
+                      <Sparkles className="mr-3 h-5 w-5" />
+                      <span>Get Started</span>
                     </Link>
                   </>
                 )}

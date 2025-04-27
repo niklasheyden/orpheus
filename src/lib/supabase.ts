@@ -11,17 +11,15 @@ console.log('Initializing Supabase client with URL:', supabaseUrl);
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
   auth: {
-    persistSession: true,
     autoRefreshToken: true,
-    detectSessionInUrl: true,
-    storage: localStorage,
-    storageKey: 'sb-auth'
+    persistSession: true,
   },
   global: {
     headers: {
-      'X-Client-Info': 'supabase-js'
-    }
-  }
+      'apikey': supabaseAnonKey,
+      'Prefer': 'return=minimal',
+    },
+  },
 });
 
 // Initialize auth state

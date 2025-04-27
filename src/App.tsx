@@ -28,6 +28,9 @@ import ScrollToTop from './components/ScrollToTop';
 import { supabase } from './lib/supabase';
 import Verify from './pages/auth/Verify';
 import Onboarding from './pages/Onboarding';
+import Pricing from './pages/Pricing';
+import Account from './pages/Account';
+import SubscriptionSuccess from './pages/SubscriptionSuccess';
 
 const queryClient = new QueryClient();
 
@@ -85,6 +88,8 @@ function App() {
                       <Route path="/privacy" element={<PrivacyPolicy />} />
                       <Route path="/terms" element={<TermsOfService />} />
                       <Route path="/imprint" element={<Imprint />} />
+                      <Route path="/pricing" element={<Pricing />} />
+                      <Route path="/subscription/success" element={<SubscriptionSuccess />} />
 
                       {/* Protected Routes */}
                       {session ? (
@@ -98,6 +103,7 @@ function App() {
                           <Route path="/most-liked" element={<MostLikedPage />} />
                           <Route path="/recent" element={<RecentPage />} />
                           <Route path="/onboarding" element={<Onboarding />} />
+                          <Route path="/account" element={<Account />} />
                         </>
                       ) : (
                         // Redirect all protected routes to waitlist
@@ -111,6 +117,7 @@ function App() {
                           <Route path="/most-liked" element={<Navigate to="/waitlist" replace />} />
                           <Route path="/recent" element={<Navigate to="/waitlist" replace />} />
                           <Route path="/onboarding" element={<Navigate to="/waitlist" replace />} />
+                          <Route path="/account" element={<Navigate to="/waitlist" replace />} />
                         </>
                       )}
                     </Routes>
