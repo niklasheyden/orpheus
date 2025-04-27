@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, FileText, Users, Calendar, Hash, BookOpen, Loader2, Sparkles, X, Lock, Globe } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../lib/supabase';
@@ -43,6 +43,8 @@ const Generate = () => {
     doi: '',
     isPublic: true
   });
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [checkingLimit, setCheckingLimit] = useState(true);
 
   const researchFields = RESEARCH_FIELDS.map(field => field.name);
 
@@ -590,6 +592,45 @@ Format: Single paragraph, detailed description`
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 51 }, (_, i) => currentYear - i);
 
+  useEffect(() => {
+    const checkLimit = async () => {
+      if (!user) return;
+      setCheckingLimit(true);
+      // Fetch subscription
+      const { data: subscription } = await supabase
+        .from('user_subscriptions')
+        .select('*')
+        .eq('user_id', user.id)
+        .single();
+      let limit = 1;
+      if (subscription?.tier === 'pro') limit = 10;
+      if (subscription?.tier === 'premium') limit = 50;
+      const periodStart = subscription?.current_period_start;
+      // Count podcasts in current period
+      let count = 0;
+      if (periodStart) {
+        const { count: podcastCount } = await supabase
+          .from('podcasts')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .gte('created_at', periodStart);
+        count = podcastCount || 0;
+      } else {
+        // No subscription, count all podcasts
+        const { count: podcastCount } = await supabase
+          .from('podcasts')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+        count = podcastCount || 0;
+      }
+      if (count >= limit) {
+        setShowUpgradeModal(true);
+      }
+      setCheckingLimit(false);
+    };
+    checkLimit();
+  }, [user]);
+
   return (
     <div className="relative min-h-screen">
       <div className="absolute inset-0 bg-grid-slate-900 bg-[center_-1px] [mask-image:linear-gradient(0deg,transparent,black)]" />
@@ -936,6 +977,25 @@ Format: Single paragraph, detailed description`
         progress={progress}
         currentStage={currentStage}
       />
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && !checkingLimit && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="bg-slate-800 rounded-2xl p-8 max-w-md w-full mx-4 border border-slate-700/50 shadow-xl text-center">
+            <h2 className="text-2xl font-bold mb-4 text-white">Upgrade Required</h2>
+            <p className="text-slate-300 mb-6">
+              You have reached your podcast creation limit for your current plan.<br />
+              Please upgrade your subscription to create more podcasts.
+            </p>
+            <button
+              onClick={() => navigate('/pricing')}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-sky-400 to-indigo-500 text-white rounded-full px-8 py-3 font-medium hover:shadow-lg hover:shadow-sky-400/20 transition-all"
+            >
+              View Plans
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
