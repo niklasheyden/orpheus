@@ -160,6 +160,11 @@ const Onboarding = () => {
     }
   };
 
+  // Scroll to top when step changes
+  React.useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
+
   return (
     <div className="min-h-screen bg-slate-950 text-white py-12">
       {/* Progress bar */}
