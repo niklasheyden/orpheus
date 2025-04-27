@@ -283,7 +283,7 @@ const Survey = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Your email address</label>
+              <label className="block text-sm font-medium text-slate-300 mb-2">Invite a Colleague</label>
               <input
                 type="email"
                 value={surveyData.email}
