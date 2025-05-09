@@ -29,7 +29,8 @@ export const useSubscription = () => {
   const { data: subscription, isLoading: isLoadingSubscription } = useQuery<UserSubscription | null>({
     queryKey: ['userSubscription', user?.id],
     queryFn: async () => {
-      if (!user) return null;
+      console.log('useSubscription queryFn user:', user);
+      if (!user || !user.id) return null;
       
       // First get the subscription from the database
       const dbSubscription = await getUserSubscription(user.id);

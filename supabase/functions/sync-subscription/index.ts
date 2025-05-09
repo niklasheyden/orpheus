@@ -8,6 +8,10 @@ const stripe = Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
 
 serve(async (req) => {
   try {
+    const rawBody = await req.text();
+    console.log('Raw request body:', rawBody);
+    // Re-create the request with the raw body for further processing
+    const reqWithBody = new Request(req.url, { method: req.method, headers: req.headers, body: rawBody });
     // Handle CORS preflight
     if (req.method === 'OPTIONS') {
       return new Response(null, {
@@ -15,20 +19,35 @@ serve(async (req) => {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'POST',
-          'Access-Control-Allow-Headers': '*',
-        },
+          'Access-Control-Allow-Headers': '*'
+        }
       });
     }
-
     if (req.method !== 'POST') {
       throw new Error('Method not allowed');
     }
-
-    const { userId } = await req.json();
-    console.log('Syncing subscription for user:', userId);
-
+    // Robust JSON parsing
+    let userId;
+    try {
+      const body = rawBody ? JSON.parse(rawBody) : {};
+      userId = body.userId;
+    } catch {
+      return new Response(JSON.stringify({ error: "Invalid or missing JSON body" }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
+    }
     if (!userId) {
-      throw new Error('Missing required fields');
+      return new Response(JSON.stringify({ error: "Missing required fields" }), {
+        status: 400,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      });
     }
 
     // Get Supabase configuration
@@ -39,10 +58,10 @@ serve(async (req) => {
       throw new Error('Missing Supabase configuration');
     }
 
-    // First, get the customer ID from the users table
-    console.log('Fetching customer ID from users table...');
-    const userResponse = await fetch(
-      `${supabaseUrl}/rest/v1/users?id=eq.${userId}&select=stripe_customer_id`,
+    // First, get the customer ID from the user_subscriptions table
+    console.log('Fetching customer ID from user_subscriptions table...');
+    const subResponse = await fetch(
+      `${supabaseUrl}/rest/v1/user_subscriptions?user_id=eq.${userId}&select=stripe_customer_id`,
       {
         headers: {
           'Authorization': `Bearer ${supabaseKey}`,
@@ -51,15 +70,15 @@ serve(async (req) => {
       }
     );
 
-    if (!userResponse.ok) {
-      console.error('Failed to fetch user data:', await userResponse.text());
+    if (!subResponse.ok) {
+      console.error('Failed to fetch user data:', await subResponse.text());
       throw new Error('Failed to fetch user data');
     }
 
-    const users = await userResponse.json();
-    console.log('User data:', users);
+    const dbSubscriptions = await subResponse.json();
+    console.log('Subscription data:', dbSubscriptions);
     
-    const stripeCustomerId = users[0]?.stripe_customer_id;
+    const stripeCustomerId = dbSubscriptions[0]?.stripe_customer_id;
     console.log('Stripe customer ID:', stripeCustomerId);
 
     if (!stripeCustomerId) {
@@ -110,18 +129,27 @@ serve(async (req) => {
       });
     }
 
-    // Get all subscriptions for the customer from Stripe
-    console.log('Fetching subscriptions from Stripe...');
-    const subscriptions = await stripe.subscriptions.list({
-      customer: stripeCustomerId,
-      status: 'all',
-      expand: ['data.items.data.price.product'],
+    // Before upsert: delete any row with the same stripe_customer_id but a different user_id
+    await fetch(`${supabaseUrl}/rest/v1/user_subscriptions?stripe_customer_id=eq.${stripeCustomerId}&user_id=neq.${userId}`, {
+      method: 'DELETE',
+      headers: {
+        'Authorization': `Bearer ${supabaseKey}`,
+        'apikey': supabaseKey
+      }
     });
 
-    console.log('Stripe subscriptions:', subscriptions.data);
+    // Get all subscriptions for the customer from Stripe
+    console.log('Fetching subscriptions from Stripe...');
+    const stripeSubscriptions = await stripe.subscriptions.list({
+      customer: stripeCustomerId,
+      status: 'all',
+      expand: ['data.items.data.price'],
+    });
+
+    console.log('Stripe subscriptions:', stripeSubscriptions.data);
 
     // Find the most recent active or trialing subscription
-    const activeSubscription = subscriptions.data.find(sub => 
+    const activeSubscription = stripeSubscriptions.data.find(sub => 
       ['active', 'trialing'].includes(sub.status)
     );
 
@@ -172,7 +200,7 @@ serve(async (req) => {
 
     // Update or insert the subscription
     const updateResponse = await fetch(
-      `${supabaseUrl}/rest/v1/user_subscriptions`,
+      `${supabaseUrl}/rest/v1/user_subscriptions?on_conflict=user_id`,
       {
         method: 'POST',
         headers: {
@@ -181,15 +209,17 @@ serve(async (req) => {
           'Content-Type': 'application/json',
           'Prefer': 'resolution=merge-duplicates',
         },
-        body: JSON.stringify({
-          user_id: userId,
-          stripe_customer_id: stripeCustomerId,
-          stripe_subscription_id: activeSubscription.id,
-          status: activeSubscription.status,
-          tier: tier,
-          current_period_end: new Date(activeSubscription.current_period_end * 1000).toISOString(),
-          cancel_at_period_end: activeSubscription.cancel_at_period_end,
-        }),
+        body: JSON.stringify([
+          {
+            user_id: userId,
+            stripe_customer_id: stripeCustomerId,
+            stripe_subscription_id: activeSubscription.id,
+            status: activeSubscription.status,
+            tier: tier,
+            current_period_end: new Date(activeSubscription.current_period_end * 1000).toISOString(),
+            cancel_at_period_end: activeSubscription.cancel_at_period_end,
+          }
+        ]),
       }
     );
 

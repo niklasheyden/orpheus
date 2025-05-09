@@ -107,21 +107,22 @@ export const createCustomerPortalSession = async (
 
 // Sync subscription status with Stripe
 export const syncSubscription = async (userId: string): Promise<void> => {
+  if (!userId) {
+    console.error('syncSubscription called without a valid userId');
+    return;
+  }
   try {
     const { data: { session } } = await supabase.auth.getSession();
-    
     if (!session?.access_token) {
       throw new Error('No active session found');
     }
-
+    console.log('Invoking sync-subscription with userId:', userId);
     const { error } = await supabase.functions.invoke('sync-subscription', {
-      body: { userId },
+      body: JSON.stringify({ userId }),
       headers: {
-        Authorization: `Bearer ${session.access_token}`,
-        'Content-Type': 'application/json'
+        Authorization: `Bearer ${session.access_token}`
       }
     });
-
     if (error) {
       console.error('Error syncing subscription:', error);
       throw error;
