@@ -52,7 +52,6 @@ const Waitlist = () => {
 
       console.log('Successfully added to waitlist');
       setShowSuccess(true);
-      setEmail('');
     } catch (error) {
       console.error('Error:', error);
       setError('Something went wrong. Please try again.');
@@ -225,7 +224,10 @@ const Waitlist = () => {
               </p>
               <div className="flex gap-4">
                 <button
-                  onClick={() => setShowSuccess(false)}
+                  onClick={() => {
+                    setShowSuccess(false);
+                    setEmail('');
+                  }}
                   className="flex-1 bg-slate-700 text-white rounded-lg px-4 py-3 font-medium hover:bg-slate-600 transition-all"
                 >
                   Skip for Now
@@ -233,7 +235,8 @@ const Waitlist = () => {
                 <button
                   onClick={() => {
                     setShowSuccess(false);
-                    navigate('/survey');
+                    navigate('/survey?email=' + encodeURIComponent(email));
+                    setEmail('');
                   }}
                   className="flex-1 bg-gradient-to-r from-emerald-400 to-teal-500 text-white rounded-lg px-4 py-3 font-medium hover:shadow-lg hover:shadow-emerald-400/20 transition-all"
                 >

@@ -6,8 +6,9 @@ import { supabase } from '../lib/supabase';
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const inviteCode = searchParams.get('invite');
+  const emailParam = searchParams.get('email');
   
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(emailParam || '');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(searchParams.get('signup') === 'true');
@@ -40,6 +41,8 @@ const Auth = () => {
         setIsSignUp(true);
         if (data.email) {
           setEmail(data.email);
+        } else if (emailParam) {
+          setEmail(emailParam);
         }
       }
     } catch (error) {

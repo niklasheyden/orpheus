@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { ArrowLeft, Loader2, CheckCircle } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 import { RESEARCH_FIELDS, RESEARCH_FIELD_CATEGORIES } from '../lib/constants';
@@ -16,6 +16,7 @@ interface SurveyData {
 
 const Survey = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [surveyData, setSurveyData] = useState<SurveyData>({
@@ -65,6 +66,14 @@ const Survey = () => {
     'Networking with other researchers',
     'Making research more engaging',
   ];
+
+  React.useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const userEmail = params.get('email');
+    if (userEmail) {
+      setSurveyData(prev => ({ ...prev, email: userEmail }));
+    }
+  }, [location]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -116,7 +125,7 @@ const Survey = () => {
       // Generate an invite code for the user
       const inviteCode = Math.random().toString(36).substring(2, 10).toUpperCase();
 
-      // Create an invite code entry
+      // Insert invite code for the user
       const { error: inviteError } = await supabase
         .from('invite_codes')
         .insert([{
@@ -126,13 +135,12 @@ const Survey = () => {
           created_at: new Date().toISOString(),
           type: 'survey'
         }]);
-
       if (inviteError) throw inviteError;
 
       // Show success message and redirect
       setShowSuccess(true);
       setTimeout(() => {
-        navigate(`/auth?invite=${inviteCode}`);
+        navigate(`/auth?invite=${inviteCode}&email=${encodeURIComponent(surveyData.email)}`);
       }, 2000);
     } catch (error: any) {
       console.error('Error:', error);
@@ -280,21 +288,6 @@ const Survey = () => {
                 placeholder="Tell us about your ideal use case..."
                 required
               />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-2">Invite a Colleague</label>
-              <input
-                type="email"
-                value={surveyData.email}
-                onChange={(e) => updateSurveyData('email', e.target.value)}
-                className="w-full bg-slate-800/50 border border-slate-700/50 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-sky-400/50"
-                placeholder="Enter your email"
-                required
-              />
-              <p className="mt-2 text-sm text-slate-400">
-                We'll send your invitation code to this email address.
-              </p>
             </div>
           </div>
         );
