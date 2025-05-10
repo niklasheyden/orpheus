@@ -215,6 +215,14 @@ export default function Account() {
                     : `Your next billing date is ${formatDate(subscription.current_period_end)}`}
                 </p>
               </div>
+              <div className="mt-4">
+                <Link
+                  to="/pricing"
+                  className="text-sky-400 hover:underline text-sm font-medium"
+                >
+                  See all plans
+                </Link>
+              </div>
             </div>
           ) : (
             <div>
@@ -225,6 +233,14 @@ export default function Account() {
               >
                 Upgrade to Pro
               </Link>
+              <div className="mt-4">
+                <Link
+                  to="/pricing"
+                  className="text-sky-400 hover:underline text-sm font-medium"
+                >
+                  See all plans
+                </Link>
+              </div>
             </div>
           )}
         </div>

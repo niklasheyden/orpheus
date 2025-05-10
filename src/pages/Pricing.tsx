@@ -59,7 +59,7 @@ const Pricing: React.FC = () => {
                   : 'text-slate-400 hover:text-white'
               }`}
             >
-              Yearly <span className="text-emerald-400 ml-1">(Save 20%)</span>
+              Yearly <span className="text-emerald-400 ml-1">(Save 17%)</span>
             </button>
           </div>
         </div>

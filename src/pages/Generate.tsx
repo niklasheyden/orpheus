@@ -602,7 +602,7 @@ Format: Single paragraph, detailed description`
         .select('*')
         .eq('user_id', user.id)
         .single();
-      let limit = 1;
+      let limit = 3;
       if (subscription?.tier === 'pro') limit = 10;
       if (subscription?.tier === 'premium') limit = 50;
       const periodStart = subscription?.current_period_start;
