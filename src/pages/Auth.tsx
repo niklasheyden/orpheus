@@ -105,7 +105,13 @@ const Auth = () => {
 
         if (updateError) throw updateError;
 
-        // Sign in immediately after signup
+        // If email confirmation is required, redirect to verify page
+        if (!signUpData.user.confirmed_at) {
+          navigate('/auth/verify');
+          return;
+        }
+
+        // Sign in immediately after signup (if confirmed)
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
           email,
           password
