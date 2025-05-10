@@ -79,6 +79,7 @@ const Auth = () => {
         }
 
         // Sign up
+        console.log('Signing up with:', email, password);
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
