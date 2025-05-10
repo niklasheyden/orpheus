@@ -159,6 +159,9 @@ export default function Account() {
     }
   };
 
+  // Debug: Log the subscription object
+  console.log('Account page subscription:', subscription);
+
   if (isLoadingSubscription) {
     return (
       <div className="min-h-screen bg-slate-900 text-white py-16 px-4 sm:px-6 lg:px-8">

@@ -117,12 +117,13 @@ export const syncSubscription = async (userId: string): Promise<void> => {
       throw new Error('No active session found');
     }
     console.log('Invoking sync-subscription with userId:', userId);
-    const { error } = await supabase.functions.invoke('sync-subscription', {
+    const { data, error } = await supabase.functions.invoke('sync-subscription', {
       body: JSON.stringify({ userId }),
       headers: {
         Authorization: `Bearer ${session.access_token}`
       }
     });
+    console.log('Sync subscription response:', { data, error });
     if (error) {
       console.error('Error syncing subscription:', error);
       throw error;

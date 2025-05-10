@@ -34,13 +34,17 @@ export const useSubscription = () => {
       
       // First get the subscription from the database
       const dbSubscription = await getUserSubscription(user.id);
+      console.log('Initial database subscription:', dbSubscription);
       
       // If we have a subscription, sync it with Stripe
       if (dbSubscription?.stripe_subscription_id) {
         try {
+          console.log('Syncing subscription with Stripe...');
           await syncSubscription(user.id);
           // Fetch the updated subscription
-          return await getUserSubscription(user.id);
+          const updatedSubscription = await getUserSubscription(user.id);
+          console.log('Updated subscription after sync:', updatedSubscription);
+          return updatedSubscription;
         } catch (error) {
           console.error('Error syncing subscription:', error);
           // Return the un-synced subscription if sync fails
