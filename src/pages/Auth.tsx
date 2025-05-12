@@ -121,8 +121,20 @@ const Auth = () => {
         if (signInError) throw signInError;
         if (!signInData.user) throw new Error('No user data returned after sign in');
 
-        // Redirect to onboarding after successful signup and sign in
-        navigate('/onboarding');
+        // Fetch user profile to check onboarding status
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', signInData.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile && !profile.onboarding_completed) {
+          navigate('/onboarding');
+        } else {
+          navigate(`/user/${signInData.user.id}`);
+        }
       } else {
         // Sign in
         const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
@@ -133,8 +145,20 @@ const Auth = () => {
         if (signInError) throw signInError;
         if (!signInData.user) throw new Error('No user data returned after sign in');
 
-        // Redirect to user profile page after sign in
-        navigate(`/user/${signInData.user.id}`);
+        // Fetch user profile to check onboarding status
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('onboarding_completed')
+          .eq('id', signInData.user.id)
+          .single();
+
+        if (profileError) throw profileError;
+
+        if (profile && !profile.onboarding_completed) {
+          navigate('/onboarding');
+        } else {
+          navigate(`/user/${signInData.user.id}`);
+        }
       }
     } catch (error: any) {
       console.error('Error:', error);
