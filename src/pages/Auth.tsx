@@ -52,7 +52,7 @@ const Auth = () => {
       setIsCheckingInvite(false);
     }
   };
-
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);

@@ -23,7 +23,7 @@ const Waitlist = () => {
         .from('waitlist')
         .select('email')
         .eq('email', email)
-        .single();
+        .maybeSingle();
 
       if (existingError) {
         console.log('Error checking existing email:', existingError);
